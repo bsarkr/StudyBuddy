@@ -2,7 +2,7 @@
 //  StudyBuddyUITestsLaunchTests.swift
 //  StudyBuddyUITests
 //
-//  Created by Bilash Sarkar on 4/10/25.
+//  Created by Bilash Sarkar and Max Hazelton on 4/10/25.
 //
 
 import XCTest
