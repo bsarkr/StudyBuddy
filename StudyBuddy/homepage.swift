@@ -8,62 +8,117 @@ struct Homepage: View {
     let libraryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("library")
 
     var body: some View {
-        VStack(alignment: .leading) {
-            Text("Hello, \(userName)")
-                .font(.largeTitle)
-                .padding(.top)
+        ZStack {
+            Color.pink.opacity(0.15).edgesIgnoringSafeArea(.all)
 
-            Text("All Sets")
-                .font(.headline)
-                .padding(.leading)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    ForEach(sets, id: \.self) { setURL in
-                        Text(setURL.deletingPathExtension().lastPathComponent)
-                            .padding()
-                            .background(Color.gray.opacity(0.2))
-                            .cornerRadius(8)
-                    }
-                }
-                .padding(.horizontal)
-            }
-
-            Text("Folders")
-                .font(.headline)
-                .padding([.leading, .top])
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    ForEach(folders, id: \.self) { folderURL in
-                        Text(folderURL.lastPathComponent)
-                            .padding()
-                            .background(Color.blue.opacity(0.2))
-                            .cornerRadius(8)
-                    }
-                }
-                .padding(.horizontal)
-            }
-
-            Spacer()
-
-            HStack {
-                Spacer()
-                Button(action: {
-                    // Add new set action
-                }) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 24))
+            VStack(spacing: 0) {
+                // Top Pink Header
+                ZStack(alignment: .bottomLeading) {
+                    Color.pink
+                    Text("Hello, \(userName)")
+                        .font(.system(size: 36, weight: .bold))
                         .foregroundColor(.white)
-                        .padding()
-                        .background(Color.pink)
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
+                        .padding(.bottom, 30)
+                        .padding(.leading)
                 }
-                .padding(.bottom)
+                .frame(height: 150)
+                .edgesIgnoringSafeArea(.top)
+
+                
+
+                // Sets Section
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("All Sets")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .padding(.top, 12)
+                        .padding(.leading)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            if sets.isEmpty {
+                                Text("No sets created yet.")
+                                    .foregroundColor(.white.opacity(0.7))
+                                    .padding()
+                                    .background(Color.pink.opacity(0.4))
+                                    .cornerRadius(10)
+                            } else {
+                                ForEach(sets, id: \.self) { setURL in
+                                    Text(setURL.deletingPathExtension().lastPathComponent)
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(Color.pink.opacity(0.6))
+                                        .cornerRadius(12)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+
+                    Spacer()
+                }
+                .frame(height: 240)
+                .background(Color.pink.opacity(0.25))
+                .cornerRadius(20)
+                .padding(.bottom, 8)
+
+               
+
+                // Folders Section
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Folders")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .padding(.top, 12)
+                        .padding(.leading)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            if folders.isEmpty {
+                                Text("No folders yet.")
+                                    .foregroundColor(.white.opacity(0.7))
+                                    .padding()
+                                    .background(Color.pink.opacity(0.4))
+                                    .cornerRadius(10)
+                            } else {
+                                ForEach(folders, id: \.self) { folderURL in
+                                    Text(folderURL.lastPathComponent)
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(Color.pink.opacity(0.5))
+                                        .cornerRadius(12)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+
+                    Spacer()
+                }
+                .frame(height: 240)
+                .background(Color.pink.opacity(0.2))
+                .cornerRadius(20)
+
+                Spacer()
+
+                // Bottom Button
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        // Add new set action
+                    }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.pink)
+                            .clipShape(Circle())
+                            .shadow(radius: 5)
+                    }
+                    .padding()
+                }
             }
         }
-        .padding(.horizontal)
         .onAppear {
             createLibraryDirectoryIfNeeded()
             loadFoldersAndSets()
@@ -105,4 +160,3 @@ struct Homepage_Previews: PreviewProvider {
         Homepage()
     }
 }
-
