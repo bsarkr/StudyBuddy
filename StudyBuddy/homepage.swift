@@ -1,3 +1,10 @@
+//
+//  loginView.swift
+//  StudyBuddy
+//
+//  Created by Max Hazelton and Bilash Sarkar on 4/10/25.
+//
+
 import SwiftUI
 
 struct Homepage: View {
