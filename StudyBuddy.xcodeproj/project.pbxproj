@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		03F018D72DA8A88100B4528F /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 03F018D62DA8A87900B4528F /* .gitignore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		03B0603B2DA8278A00970287 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		03B0602D2DA8278900970287 /* StudyBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StudyBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		03B0603A2DA8278A00970287 /* StudyBuddyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StudyBuddyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		03B060442DA8278A00970287 /* StudyBuddyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StudyBuddyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		03F018D62DA8A87900B4528F /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +80,7 @@
 		03B060242DA8278900970287 = {
 			isa = PBXGroup;
 			children = (
+				03F018D62DA8A87900B4528F /* .gitignore */,
 				03B0602F2DA8278900970287 /* StudyBuddy */,
 				03B0603D2DA8278A00970287 /* StudyBuddyTests */,
 				03B060472DA8278A00970287 /* StudyBuddyUITests */,
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				03F018D72DA8A88100B4528F /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
