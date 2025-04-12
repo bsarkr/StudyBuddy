@@ -9,16 +9,15 @@ import SwiftUI
 import FirebaseAuth
 
 struct LoginView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+
     @State private var email = ""
     @State private var password = ""
-    @State private var isCreatingAccount = false
-    @State private var isAuthenticated = false
     @State private var errorMessage: String?
+    @State private var goToSetup = false
 
     var body: some View {
-        if isAuthenticated {
-            Homepage()
-        } else {
+        NavigationStack {
             ZStack {
                 Color.pink.opacity(0.15).edgesIgnoringSafeArea(.all)
 
@@ -46,12 +45,15 @@ struct LoginView: View {
                             Text(error)
                                 .foregroundColor(.red)
                                 .font(.footnote)
+                                .multilineTextAlignment(.center)
                         }
                     }
                     .padding(.horizontal, 30)
 
-                    Button(action: authenticateUser) {
-                        Text(isCreatingAccount ? "Create Account" : "Login")
+                    Button(action: {
+                        goToSetup = true
+                    }) {
+                        Text("Create Account")
                             .foregroundColor(.white)
                             .fontWeight(.bold)
                             .frame(maxWidth: .infinity)
@@ -62,45 +64,39 @@ struct LoginView: View {
                     .padding(.horizontal, 30)
                     .shadow(radius: 5)
 
-                    Button(action: {
-                        isCreatingAccount.toggle()
-                        errorMessage = nil
-                    }) {
-                        Text(isCreatingAccount ? "Already have an account? Login" : "Don't have an account? Sign Up")
+                    Button(action: login) {
+                        Text("Already have an account? Log In")
                             .font(.footnote)
                             .foregroundColor(.pink)
                     }
 
                     Spacer()
                 }
+                .navigationDestination(isPresented: $goToSetup) {
+                    UserSetupView(email: email, password: password)
+                        .environmentObject(authViewModel)
+                }
             }
         }
     }
 
-    func authenticateUser() {
+    func login() {
         errorMessage = nil
-        if isCreatingAccount {
-            Auth.auth().createUser(withEmail: email, password: password) { result, error in
-                if let error = error {
-                    errorMessage = error.localizedDescription
-                } else {
-                    isAuthenticated = true
-                }
-            }
-        } else {
-            Auth.auth().signIn(withEmail: email, password: password) { result, error in
-                if let error = error {
-                    errorMessage = error.localizedDescription
-                } else {
-                    isAuthenticated = true
+
+        Auth.auth().signIn(withEmail: email, password: password) { result, error in
+            if let error = error {
+                errorMessage = error.localizedDescription
+            } else if let user = result?.user {
+                user.reload { _ in
+                    if user.isEmailVerified {
+                        authViewModel.isLoggedIn = true
+                        authViewModel.hasCompletedSetup = true
+                    } else {
+                        errorMessage = "Please verify your email to log in."
+                        try? Auth.auth().signOut()
+                    }
                 }
             }
         }
-    }
-}
-
-struct LoginView_Previews: PreviewProvider {
-    static var previews: some View {
-        LoginView()
     }
 }
