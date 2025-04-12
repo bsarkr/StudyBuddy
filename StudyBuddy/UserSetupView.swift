@@ -152,7 +152,6 @@ struct UserSetupView: View {
             if !preferredName.isEmpty { userData["preferredName"] = preferredName }
             if !bio.isEmpty { userData["bio"] = bio }
 
-            let db = Firestore.firestore()
             let uid = user.uid
 
             if let imageData = profileImage?.jpegData(compressionQuality: 0.7) {

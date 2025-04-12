@@ -14,7 +14,7 @@ struct LoginView: View {
 
     @State private var email = ""
     @State private var password = ""
-    @State private var isCreatingAccount = false // 👈 defaults to false = login mode
+    @State private var isCreatingAccount = false
     @State private var errorMessage: String?
     @State private var goToSetup = false
 
@@ -87,7 +87,6 @@ struct LoginView: View {
         errorMessage = nil
 
         if isCreatingAccount {
-            // 👉 Skip Firebase account creation here, go to setup first
             goToSetup = true
         } else {
             Auth.auth().signIn(withEmail: email, password: password) { result, error in

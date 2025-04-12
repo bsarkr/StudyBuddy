@@ -42,7 +42,7 @@ struct UserAccountView: View {
             Button(action: {
                 withAnimation {
                     authViewModel.signOut()
-                    presentationMode.wrappedValue.dismiss() // 👈 Ensures visual navigation back
+                    presentationMode.wrappedValue.dismiss()
                 }
             }) {
                 Text("Log Out")

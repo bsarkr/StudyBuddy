@@ -14,8 +14,10 @@ class AuthViewModel: ObservableObject {
     @Published var hasCompletedSetup = false
     @Published var isEmailVerified = false
 
+    private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
+
     init() {
-        Auth.auth().addStateDidChangeListener { _, user in
+        authStateListenerHandle = Auth.auth().addStateDidChangeListener { _, user in
             DispatchQueue.main.async {
                 if let user = user {
                     self.isLoggedIn = true
@@ -26,6 +28,13 @@ class AuthViewModel: ObservableObject {
                     self.isEmailVerified = false
                 }
             }
+        }
+    }
+
+    deinit {
+        // ✅ Remove the listener to prevent memory leaks
+        if let handle = authStateListenerHandle {
+            Auth.auth().removeStateDidChangeListener(handle)
         }
     }
 
