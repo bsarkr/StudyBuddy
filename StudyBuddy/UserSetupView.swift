@@ -25,7 +25,7 @@ struct UserSetupView: View {
     @State private var profileImage: UIImage? = nil
     @State private var selectedItem: PhotosPickerItem?
     @State private var errorMessage: String?
-    @State private var goToVerification = false
+    @State private var navigateToVerification = false
 
     var body: some View {
         NavigationStack {
@@ -35,7 +35,7 @@ struct UserSetupView: View {
                 VStack(spacing: 20) {
                     HStack {
                         Button(action: {
-                            dismiss()
+                            cancelAndDelete()
                         }) {
                             Image(systemName: "xmark")
                                 .foregroundColor(.pink)
@@ -47,10 +47,7 @@ struct UserSetupView: View {
                         Spacer()
                     }
                     .padding(.horizontal)
-                    .navigationBarBackButtonHidden(true)
-                    .navigationDestination(isPresented: $goToVerification) {
-                        EmailVerificationView().environmentObject(authViewModel)
-                    }
+                    .padding(.top, 20)
 
                     Text("Tell us about you")
                         .font(.largeTitle)
@@ -66,13 +63,15 @@ struct UserSetupView: View {
                                 .clipShape(Circle())
                                 .overlay(Circle().stroke(Color.pink, lineWidth: 2))
                         } else {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 100, height: 100)
-                                .overlay(Image(systemName: "person.crop.circle.fill.badge.plus")
+                            ZStack {
+                                Circle()
+                                    .fill(Color.white)
+                                    .frame(width: 100, height: 100)
+                                    .shadow(radius: 2)
+                                Image(systemName: "person.crop.circle.fill.badge.plus")
                                     .font(.system(size: 40))
-                                    .foregroundColor(.pink))
-                                .shadow(radius: 2)
+                                    .foregroundColor(.pink)
+                            }
                         }
                     }
                     .task(id: selectedItem) {
@@ -116,8 +115,10 @@ struct UserSetupView: View {
                     Spacer()
                 }
                 .padding(.top)
-                .navigationDestination(isPresented: $goToVerification) {
-                    EmailVerificationView().environmentObject(authViewModel)
+                .navigationBarBackButtonHidden(true)
+
+                NavigationLink(destination: EmailVerificationView(email: email).environmentObject(authViewModel), isActive: $navigateToVerification) {
+                    EmptyView()
                 }
             }
         }
@@ -136,53 +137,76 @@ struct UserSetupView: View {
             }
 
             guard let user = result?.user else {
-                errorMessage = "Failed to create user."
+                errorMessage = "User creation failed."
                 return
             }
 
-            user.sendEmailVerification(completion: nil)
+            user.sendEmailVerification()
 
             var userData: [String: Any] = [
                 "email": email,
                 "firstName": firstName,
                 "lastName": lastName,
                 "setupComplete": true,
-                "createdAt": Timestamp(date: Date())
+                "createdAt": Timestamp()
             ]
             if !preferredName.isEmpty { userData["preferredName"] = preferredName }
             if !bio.isEmpty { userData["bio"] = bio }
 
-            let uid = user.uid
-
             if let imageData = profileImage?.jpegData(compressionQuality: 0.7) {
-                let ref = Storage.storage().reference().child("profilePictures/\(uid).jpg")
-                ref.putData(imageData, metadata: nil) { _, error in
-                    if error != nil {
-                        errorMessage = "Image upload failed"
-                        return
-                    }
+                let storage = Storage.storage()
+                let ref = storage.reference().child("profilePictures/\(user.uid).jpg")
+                let uploadTask = ref.putData(imageData, metadata: nil)
 
+                uploadTask.observe(.success) { _ in
                     ref.downloadURL { url, _ in
-                        if let downloadURL = url {
-                            userData["photoURL"] = downloadURL.absoluteString
+                        if let url = url {
+                            userData["photoURL"] = url.absoluteString
                         }
-                        saveUserData(uid, userData)
+                        saveUserData(uid: user.uid, data: userData)
+                    }
+                }
+
+                uploadTask.observe(.failure) { snapshot in
+                    if let error = snapshot.error {
+                        errorMessage = "Upload error: \(error.localizedDescription)"
                     }
                 }
             } else {
-                saveUserData(uid, userData)
+                saveUserData(uid: user.uid, data: userData)
             }
         }
     }
 
-    func saveUserData(_ uid: String, _ userData: [String: Any]) {
-        Firestore.firestore().collection("users").document(uid).setData(userData) { err in
-            if err == nil {
-                authViewModel.isLoggedIn = true
-                authViewModel.hasCompletedSetup = true
-                goToVerification = true
+    func saveUserData(uid: String, data: [String: Any]) {
+        Firestore.firestore().collection("users").document(uid).setData(data) { error in
+            if let error = error {
+                errorMessage = error.localizedDescription
             } else {
-                errorMessage = err?.localizedDescription
+                withAnimation {
+                    authViewModel.isLoggedIn = true
+                    authViewModel.hasCompletedSetup = true
+                    authViewModel.isEmailVerified = false
+                    navigateToVerification = true
+                }
+            }
+        }
+    }
+
+    func cancelAndDelete() {
+        guard let user = Auth.auth().currentUser else {
+            dismiss()
+            return
+        }
+
+        let db = Firestore.firestore()
+        db.collection("users").document(user.uid).delete { _ in
+            user.delete { _ in
+                try? Auth.auth().signOut()
+                authViewModel.isLoggedIn = false
+                authViewModel.hasCompletedSetup = false
+                authViewModel.isEmailVerified = false
+                dismiss()
             }
         }
     }

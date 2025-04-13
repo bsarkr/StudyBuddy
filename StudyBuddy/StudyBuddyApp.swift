@@ -7,6 +7,8 @@
 
 import SwiftUI
 import Firebase
+import FirebaseAuth
+import FirebaseAppCheck
 
 @main
 struct StudyBuddyApp: App {
@@ -17,6 +19,7 @@ struct StudyBuddyApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(authViewModel)
+                .preferredColorScheme(.light)
         }
     }
 }
@@ -25,6 +28,14 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
+        
+        //Enables App Check Debug Provider
+                #if DEBUG
+                let providerFactory = AppCheckDebugProviderFactory()
+                AppCheck.setAppCheckProviderFactory(providerFactory)
+                #endif
+        
+        
         return true
     }
 }
@@ -38,7 +49,7 @@ struct RootView: View {
                 if !authViewModel.hasCompletedSetup {
                     UserSetupView(email: "", password: "")
                 } else if !authViewModel.isEmailVerified {
-                    EmailVerificationView()
+                    EmailVerificationView(email: Auth.auth().currentUser?.email ?? "")
                 } else {
                     Homepage()
                 }

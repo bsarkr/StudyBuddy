@@ -12,6 +12,9 @@ import FirebaseFirestore
 struct EmailVerificationView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) var dismiss
+    
+    let email: String
+    
     @State private var isVerified = false
     @State private var timer: Timer?
     @State private var error: String?
@@ -33,6 +36,7 @@ struct EmailVerificationView: View {
                     Spacer()
                 }
                 .padding(.horizontal)
+                .padding(.top, 40)
                 .navigationBarBackButtonHidden(true)
                 .fullScreenCover(isPresented: $isVerified) {
                     Homepage().environmentObject(authViewModel)

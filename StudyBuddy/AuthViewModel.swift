@@ -14,10 +14,10 @@ class AuthViewModel: ObservableObject {
     @Published var hasCompletedSetup = false
     @Published var isEmailVerified = false
 
-    private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
+    private var handle: AuthStateDidChangeListenerHandle?
 
     init() {
-        authStateListenerHandle = Auth.auth().addStateDidChangeListener { _, user in
+        handle = Auth.auth().addStateDidChangeListener { _, user in
             DispatchQueue.main.async {
                 if let user = user {
                     self.isLoggedIn = true
@@ -32,8 +32,7 @@ class AuthViewModel: ObservableObject {
     }
 
     deinit {
-        // ✅ Remove the listener to prevent memory leaks
-        if let handle = authStateListenerHandle {
+        if let handle = handle {
             Auth.auth().removeStateDidChangeListener(handle)
         }
     }
@@ -54,11 +53,11 @@ class AuthViewModel: ObservableObject {
     func signOut() {
         do {
             try Auth.auth().signOut()
-            self.isLoggedIn = false
-            self.hasCompletedSetup = false
-            self.isEmailVerified = false
+            isLoggedIn = false
+            hasCompletedSetup = false
+            isEmailVerified = false
         } catch {
-            print("Sign-out failed: \(error.localizedDescription)")
+            print("Failed to sign out: \(error.localizedDescription)")
         }
     }
 }

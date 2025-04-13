@@ -61,10 +61,10 @@ struct Homepage: View {
                             }
                         }
                         .padding(.horizontal)
-                        .padding(.top, 10)
+                        .padding(.top, 40)
                         .padding(.bottom, 10)
                     }
-                    .frame(height: 40)
+                    .frame(height: 120)
                     .padding(.bottom, 15)
 
                     // Search bar

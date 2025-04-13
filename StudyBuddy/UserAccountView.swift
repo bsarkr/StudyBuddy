@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct UserAccountView: View {
+    
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.presentationMode) var presentationMode
 
@@ -22,6 +23,7 @@ struct UserAccountView: View {
                 Spacer()
             }
             .padding()
+            .padding(.top, 40)
 
             // Placeholder for future settings
             VStack(spacing: 12) {
@@ -64,7 +66,7 @@ struct UserAccountView: View {
                 }) {
                     HStack(spacing: 6) {
                         Image(systemName: "chevron.left")
-                        Text("Back")
+                        //Text("Back")
                     }
                     .font(.headline)
                     .foregroundColor(.pink)
@@ -72,6 +74,7 @@ struct UserAccountView: View {
                     .background(Color.white.opacity(0.9))
                     .cornerRadius(10)
                     .shadow(radius: 1)
+                    .padding(.top, 60)
                 }
             }
         }
