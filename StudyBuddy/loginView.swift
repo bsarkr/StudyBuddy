@@ -87,8 +87,10 @@ struct LoginView: View {
         errorMessage = nil
 
         if isCreatingAccount {
+            authViewModel.isCreatingAccount = true
             goToSetup = true
         } else {
+            authViewModel.isCreatingAccount = false
             Auth.auth().signIn(withEmail: email, password: password) { result, error in
                 DispatchQueue.main.async {
                     if let error = error as NSError? {
@@ -106,16 +108,7 @@ struct LoginView: View {
                         }
                     } else if let user = result?.user {
                         authViewModel.isLoggedIn = true
-
-                        let db = Firestore.firestore()
-                        db.collection("users").document(user.uid).getDocument { snapshot, _ in
-                            if let data = snapshot?.data() {
-                                let setup = data["setupComplete"] as? Bool ?? false
-                                authViewModel.hasCompletedSetup = setup
-                            } else {
-                                authViewModel.hasCompletedSetup = false
-                            }
-                        }
+                        authViewModel.checkUserProfile(user: user)
                     }
                 }
             }

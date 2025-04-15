@@ -5,6 +5,7 @@
 //  Created by Bilash Sarkar on 4/12/25.
 //
 
+import SwiftUI
 import Foundation
 import FirebaseAuth
 import FirebaseFirestore
@@ -13,6 +14,7 @@ class AuthViewModel: ObservableObject {
     @Published var isLoggedIn = false
     @Published var hasCompletedSetup = false
     @Published var isEmailVerified = false
+    @Published var isCreatingAccount = false 
 
     private var handle: AuthStateDidChangeListenerHandle?
 
@@ -26,14 +28,9 @@ class AuthViewModel: ObservableObject {
                     self.isLoggedIn = false
                     self.hasCompletedSetup = false
                     self.isEmailVerified = false
+                    self.isCreatingAccount = false
                 }
             }
-        }
-    }
-
-    deinit {
-        if let handle = handle {
-            Auth.auth().removeStateDidChangeListener(handle)
         }
     }
 
@@ -45,7 +42,7 @@ class AuthViewModel: ObservableObject {
                 self.isEmailVerified = user.isEmailVerified
             } else {
                 self.hasCompletedSetup = false
-                self.isEmailVerified = false
+                self.isEmailVerified = user.isEmailVerified
             }
         }
     }
@@ -56,6 +53,7 @@ class AuthViewModel: ObservableObject {
             isLoggedIn = false
             hasCompletedSetup = false
             isEmailVerified = false
+            isCreatingAccount = false
         } catch {
             print("Failed to sign out: \(error.localizedDescription)")
         }

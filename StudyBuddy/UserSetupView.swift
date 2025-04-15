@@ -8,8 +8,6 @@
 import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
-import FirebaseStorage
-import PhotosUI
 
 struct UserSetupView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -21,13 +19,11 @@ struct UserSetupView: View {
     @State private var firstName = ""
     @State private var lastName = ""
     @State private var preferredName = ""
-    @State private var bio = ""
-    @State private var profileImage: UIImage? = nil
-    @State private var selectedItem: PhotosPickerItem?
     @State private var errorMessage: String?
-    @State private var navigateToVerification = false
+    @State private var goToVerification = false
 
     var body: some View {
+        
         NavigationStack {
             ZStack {
                 Color.pink.opacity(0.1).edgesIgnoringSafeArea(.all)
@@ -54,38 +50,10 @@ struct UserSetupView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.pink)
 
-                    PhotosPicker(selection: $selectedItem, matching: .images) {
-                        if let image = profileImage {
-                            Image(uiImage: image)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 100, height: 100)
-                                .clipShape(Circle())
-                                .overlay(Circle().stroke(Color.pink, lineWidth: 2))
-                        } else {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.white)
-                                    .frame(width: 100, height: 100)
-                                    .shadow(radius: 2)
-                                Image(systemName: "person.crop.circle.fill.badge.plus")
-                                    .font(.system(size: 40))
-                                    .foregroundColor(.pink)
-                            }
-                        }
-                    }
-                    .task(id: selectedItem) {
-                        if let data = try? await selectedItem?.loadTransferable(type: Data.self),
-                           let uiImage = UIImage(data: data) {
-                            profileImage = uiImage
-                        }
-                    }
-
                     Group {
                         TextField("First Name*", text: $firstName)
                         TextField("Last Name*", text: $lastName)
                         TextField("Preferred Name (optional)", text: $preferredName)
-                        TextField("Bio (optional)", text: $bio)
                     }
                     .padding()
                     .background(Color.white.opacity(0.9))
@@ -116,15 +84,18 @@ struct UserSetupView: View {
                 }
                 .padding(.top)
                 .navigationBarBackButtonHidden(true)
-
-                NavigationLink(destination: EmailVerificationView(email: email).environmentObject(authViewModel), isActive: $navigateToVerification) {
-                    EmptyView()
-                }
+            }
+            .navigationDestination(isPresented: $goToVerification) {
+                EmailVerificationView(email: email).environmentObject(authViewModel)
             }
         }
     }
 
     func submitUserInfo() {
+        
+        print("🧠 goToVerification: \(goToVerification)")
+        
+        
         guard !firstName.isEmpty, !lastName.isEmpty else {
             errorMessage = "Please enter your first and last name."
             return
@@ -141,53 +112,29 @@ struct UserSetupView: View {
                 return
             }
 
-            user.sendEmailVerification()
-
-            var userData: [String: Any] = [
-                "email": email,
-                "firstName": firstName,
-                "lastName": lastName,
-                "setupComplete": true,
-                "createdAt": Timestamp()
-            ]
-            if !preferredName.isEmpty { userData["preferredName"] = preferredName }
-            if !bio.isEmpty { userData["bio"] = bio }
-
-            if let imageData = profileImage?.jpegData(compressionQuality: 0.7) {
-                let storage = Storage.storage()
-                let ref = storage.reference().child("profilePictures/\(user.uid).jpg")
-                let uploadTask = ref.putData(imageData, metadata: nil)
-
-                uploadTask.observe(.success) { _ in
-                    ref.downloadURL { url, _ in
-                        if let url = url {
-                            userData["photoURL"] = url.absoluteString
-                        }
-                        saveUserData(uid: user.uid, data: userData)
-                    }
+            user.sendEmailVerification { error in
+                if let error = error {
+                    errorMessage = "Failed to send verification email: \(error.localizedDescription)"
+                    return
                 }
 
-                uploadTask.observe(.failure) { snapshot in
-                    if let error = snapshot.error {
-                        errorMessage = "Upload error: \(error.localizedDescription)"
-                    }
-                }
-            } else {
-                saveUserData(uid: user.uid, data: userData)
-            }
-        }
-    }
+                let userData: [String: Any] = [
+                    "firstName": firstName,
+                    "lastName": lastName,
+                    "preferredName": preferredName,
+                    "email": email
+                ]
 
-    func saveUserData(uid: String, data: [String: Any]) {
-        Firestore.firestore().collection("users").document(uid).setData(data) { error in
-            if let error = error {
-                errorMessage = error.localizedDescription
-            } else {
-                withAnimation {
-                    authViewModel.isLoggedIn = true
-                    authViewModel.hasCompletedSetup = true
-                    authViewModel.isEmailVerified = false
-                    navigateToVerification = true
+                Firestore.firestore().collection("users").document(user.uid).setData(userData) { error in
+                    if let error = error {
+                        errorMessage = "Error saving user data: \(error.localizedDescription)"
+                        return
+                    }
+
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        print("⏩ navigating now!")
+                        goToVerification = true
+                    }
                 }
             }
         }

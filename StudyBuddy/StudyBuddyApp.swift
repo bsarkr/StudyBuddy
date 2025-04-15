@@ -12,6 +12,7 @@ import FirebaseAppCheck
 
 @main
 struct StudyBuddyApp: App {
+    
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject var authViewModel = AuthViewModel()
 
@@ -28,14 +29,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
-        
-        //Enables App Check Debug Provider
-                #if DEBUG
-                let providerFactory = AppCheckDebugProviderFactory()
-                AppCheck.setAppCheckProviderFactory(providerFactory)
-                #endif
-        
-        
         return true
     }
 }
@@ -44,19 +37,28 @@ struct RootView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
 
     var body: some View {
-        Group {
-            if authViewModel.isLoggedIn {
-                if !authViewModel.hasCompletedSetup {
-                    UserSetupView(email: "", password: "")
-                } else if !authViewModel.isEmailVerified {
-                    EmailVerificationView(email: Auth.auth().currentUser?.email ?? "")
+        NavigationStack {
+            Group {
+                if authViewModel.isLoggedIn {
+                    if !authViewModel.hasCompletedSetup {
+                        if authViewModel.isCreatingAccount, let email = Auth.auth().currentUser?.email {
+                            UserSetupView(email: email, password: "") //step 1
+                        } else {
+                            Homepage() // logged-in users skip setup
+                        }
+                    } else if !authViewModel.isEmailVerified {
+                        if let email = Auth.auth().currentUser?.email {
+                            EmailVerificationView(email: email) //step 2
+                        } else {
+                            Homepage()
+                        }
+                    } else {
+                        Homepage() //step 3 or reload
+                    }
                 } else {
-                    Homepage()
+                    LoginView()
                 }
-            } else {
-                LoginView()
             }
         }
     }
 }
-

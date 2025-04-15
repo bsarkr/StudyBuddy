@@ -12,9 +12,9 @@ import FirebaseFirestore
 struct EmailVerificationView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.dismiss) var dismiss
-    
+
     let email: String
-    
+
     @State private var isVerified = false
     @State private var timer: Timer?
     @State private var error: String?
@@ -38,9 +38,6 @@ struct EmailVerificationView: View {
                 .padding(.horizontal)
                 .padding(.top, 40)
                 .navigationBarBackButtonHidden(true)
-                .fullScreenCover(isPresented: $isVerified) {
-                    Homepage().environmentObject(authViewModel)
-                }
 
                 Spacer()
 
@@ -65,13 +62,13 @@ struct EmailVerificationView: View {
                 Spacer()
             }
             .padding()
+            .fullScreenCover(isPresented: $isVerified) {
+                UserPersonalView().environmentObject(authViewModel)
+            }
         }
         .onAppear(perform: startChecking)
         .onDisappear {
             timer?.invalidate()
-        }
-        .fullScreenCover(isPresented: $isVerified) {
-            Homepage().environmentObject(authViewModel)
         }
     }
 
@@ -80,7 +77,9 @@ struct EmailVerificationView: View {
             Auth.auth().currentUser?.reload { error in
                 if let user = Auth.auth().currentUser, user.isEmailVerified {
                     timer?.invalidate()
-                    isVerified = true
+                    DispatchQueue.main.async {
+                        isVerified = true
+                    }
                 }
             }
         }

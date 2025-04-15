@@ -55,9 +55,22 @@
 		03B060442DA8278A00970287 /* StudyBuddyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StudyBuddyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		030880D52DAE2D0B00E8A508 /* Exceptions for "StudyBuddy" folder in "StudyBuddy" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 03B0602C2DA8278900970287 /* StudyBuddy */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		03B0602F2DA8278900970287 /* StudyBuddy */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				030880D52DAE2D0B00E8A508 /* Exceptions for "StudyBuddy" folder in "StudyBuddy" target */,
+			);
 			path = StudyBuddy;
 			sourceTree = "<group>";
 		};
@@ -473,8 +486,10 @@
 				DEVELOPMENT_TEAM = 73PT785WP2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StudyBuddy/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = StudyBuddy;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSCameraUsageDescription = "$(PRODUCT_NAME) Would Like To Access Your Camera";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -504,8 +519,10 @@
 				DEVELOPMENT_TEAM = 73PT785WP2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = StudyBuddy/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = StudyBuddy;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
+				INFOPLIST_KEY_NSCameraUsageDescription = "$(PRODUCT_NAME) Would Like To Access Your Camera";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
