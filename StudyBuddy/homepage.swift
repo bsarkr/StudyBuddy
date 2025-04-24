@@ -1,10 +1,3 @@
-//
-//  Homepage.swift
-//  StudyBuddy
-//
-//  Created by Bilash Sarkar and Max Hazelton on 4/11/25.
-//
-
 import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
@@ -20,6 +13,9 @@ struct Homepage: View {
     @State private var preferredName: String? = nil
     @State private var firstName: String = "User"
     @State private var profileImageURL: String? = UserDefaults.standard.string(forKey: "profileImageURL")
+    @State private var showingCreateSet = false
+
+    @StateObject private var setViewModel = SetViewModel()
 
     let libraryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("library")
 
@@ -99,10 +95,54 @@ struct Homepage: View {
                     }
                     .padding(.horizontal)
 
-                    // Sets
-                    contentSection(title: "All Sets", items: filteredSets.map { $0.deletingPathExtension().lastPathComponent })
+                    // Firebase Sets Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("All Sets (Cloud)")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .padding(.leading)
+                            .padding(.top, 10)
 
-                    // Folders
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                if setViewModel.sets.isEmpty {
+                                    Text("No sets yet.")
+                                        .foregroundColor(.white.opacity(0.7))
+                                        .padding()
+                                        .background(Color.pink.opacity(0.4))
+                                        .cornerRadius(10)
+                                } else {
+                                    ForEach(setViewModel.sets.filter {
+                                        searchText.isEmpty || $0.title.localizedCaseInsensitiveContains(searchText)
+                                    }) { set in
+                                        VStack(alignment: .leading) {
+                                            Text(set.title)
+                                                .font(.headline)
+                                                .foregroundColor(.white)
+                                            Text("\(set.terms.count) terms")
+                                                .font(.subheadline)
+                                                .foregroundColor(.white.opacity(0.7))
+                                            Text("goawayplease_")
+                                                .font(.caption)
+                                                .foregroundColor(.white.opacity(0.6))
+                                        }
+                                        .padding()
+                                        .background(Color.pink.opacity(0.8))
+                                        .cornerRadius(16)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
+                    .frame(height: 240)
+                    .background(Color.pink.opacity(0.2))
+                    .cornerRadius(20)
+
+                    // Local Sets Section (Unchanged)
+                    contentSection(title: "All Sets (Local)", items: filteredSets.map { $0.deletingPathExtension().lastPathComponent })
+
+                    // Folders Section (Unchanged)
                     contentSection(title: "Folders", items: filteredFolders.map { $0.lastPathComponent })
 
                     Spacer()
@@ -111,7 +151,7 @@ struct Homepage: View {
                     HStack {
                         Spacer()
                         Button(action: {
-                            // Add new set
+                            showingCreateSet = true
                         }) {
                             Image(systemName: "plus")
                                 .font(.system(size: 28, weight: .bold))
@@ -124,10 +164,16 @@ struct Homepage: View {
                         .padding()
                     }
                 }
+                .sheet(isPresented: $showingCreateSet) {
+                    CreateSetView(viewModel: setViewModel)
+                }
                 .onAppear {
                     createLibraryDirectoryIfNeeded()
                     fetchUserData()
                     loadFoldersAndSets()
+                    if let uid = Auth.auth().currentUser?.uid {
+                        setViewModel.fetchSets(for: uid)
+                    }
                 }
                 .onChange(of: scenePhase) { newPhase in
                     if newPhase == .active {
@@ -228,3 +274,4 @@ struct Homepage: View {
         self.sets = allSets
     }
 }
+
