@@ -60,7 +60,7 @@ struct Homepage: View {
                                                 image
                                                     .resizable()
                                                     .scaledToFill()
-                                                    .frame(width: 44, height: 44)
+                                                    .frame(width: 55, height: 55)
                                                     .clipShape(Circle())
                                                     .overlay(Circle().stroke(Color.pink.opacity(0.4), lineWidth: 2))
                                             case .failure:
