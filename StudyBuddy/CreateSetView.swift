@@ -5,49 +5,89 @@
 //  Created by Max Hazelton on 4/24/25.
 //
 
+import SwiftUI
+import FirebaseAuth
+
 struct CreateSetView: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: SetViewModel
+
     @State private var title: String = ""
     @State private var terms: [FlashcardTerm] = [FlashcardTerm(term: "", definition: "")]
     
     var body: some View {
         NavigationStack {
-            VStack {
-                TextField("Set Title", text: $title)
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(10)
-                    .padding(.horizontal)
+            ZStack {
+                Color.pink.opacity(0.1).edgesIgnoringSafeArea(.all)
 
-                List {
-                    ForEach(terms.indices, id: \.self) { i in
-                        VStack(alignment: .leading) {
-                            TextField("Term", text: $terms[i].term)
-                            TextField("Definition", text: $terms[i].definition)
+                VStack(spacing: 20) {
+                    TextField("Set Title", text: $title)
+                        .padding()
+                        .background(Color.white.opacity(0.9))
+                        .cornerRadius(10)
+                        .padding(.horizontal)
+
+                    List {
+                        ForEach(terms.indices, id: \.self) { index in
+                            VStack(alignment: .leading) {
+                                TextField("Term", text: $terms[index].term)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                TextField("Definition", text: $terms[index].definition)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                            }
+                            .padding(.vertical, 5)
+                        }
+                        .onDelete(perform: deleteTerm)
+                        
+                        Button(action: {
+                            terms.append(FlashcardTerm(term: "", definition: ""))
+                        }) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                Text("Add Term")
+                            }
+                            .foregroundColor(.pink)
                         }
                     }
-                    .onDelete { terms.remove(atOffsets: $0) }
+                    .listStyle(PlainListStyle())
+                    
+                    Button(action: saveSet) {
+                        Text("Save Set")
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.pink)
+                            .cornerRadius(12)
+                            .padding(.horizontal)
+                    }
 
-                    Button("Add Term") {
-                        terms.append(FlashcardTerm(term: "", definition: ""))
+                    Spacer()
+                }
+                .navigationTitle("New Study Set")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                        .foregroundColor(.pink)
                     }
                 }
-
-                Button("Save") {
-                    guard let uid = Auth.auth().currentUser?.uid else { return }
-                    let newSet = StudySet(title: title, terms: terms, userId: uid)
-                    viewModel.addSet(newSet)
-                    dismiss()
-                }
-                .padding()
-                .background(Color.pink)
-                .foregroundColor(.white)
-                .cornerRadius(12)
-
-                Spacer()
             }
-            .navigationTitle("New Set")
         }
     }
+
+    func saveSet() {
+        guard !title.isEmpty else { return }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let newSet = StudySet(title: title, terms: terms, userId: uid)
+        viewModel.addSet(newSet)
+        dismiss()
+    }
+    
+    func deleteTerm(at offsets: IndexSet) {
+        terms.remove(atOffsets: offsets)
+    }
 }
+
