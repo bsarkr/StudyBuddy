@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        RootView() // Or Homepage() directly if you want to bypass RootView
+        RootView()
     }
 }
 

@@ -1,3 +1,10 @@
+//
+// homepage.swift
+// StudyBuddy
+//
+// Created by Bilash Sarkar and Max Hazelton on 4/10/25
+
+
 import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
@@ -33,8 +40,7 @@ struct Homepage: View {
                 Color.pink.opacity(0.15).edgesIgnoringSafeArea(.all)
 
                 VStack(alignment: .leading, spacing: 10) {
-
-                    // 🟰 Fixed Top Banner 🟰
+                    
                     ZStack(alignment: .bottom) {
                         Color.pink
                             .ignoresSafeArea(edges: .top)
