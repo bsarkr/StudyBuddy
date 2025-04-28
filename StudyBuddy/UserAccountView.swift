@@ -47,11 +47,15 @@ struct UserAccountView: View {
                     Menu {
                         Button("Take Photo") {
                             imagePickerSource = .camera
-                            showImagePicker = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                showImagePicker = true
+                            }
                         }
                         Button("Choose from Library") {
                             imagePickerSource = .photoLibrary
-                            showImagePicker = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                showImagePicker = true
+                            }
                         }
                     } label: {
                         if let image = profileImage {
@@ -150,6 +154,7 @@ struct UserAccountView: View {
         .navigationBarBackButtonHidden(true)
         .fullScreenCover(isPresented: $showImagePicker) {
             ImagePicker(sourceType: imagePickerSource, image: $profileImage)
+                .id(UUID())
                 .edgesIgnoringSafeArea(.all) // just in case
         }
         .onAppear(perform: loadUserData)

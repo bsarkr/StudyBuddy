@@ -46,7 +46,30 @@ struct Homepage: View {
                                 .foregroundColor(.white)
                             Spacer()
                             NavigationLink(destination: UserAccountView().environmentObject(authViewModel)) {
-                                profileImage
+                                ZStack {
+                                    if let urlString = profileImageURL, let url = URL(string: urlString) {
+                                        AsyncImage(url: url) { phase in
+                                            switch phase {
+                                            case .empty:
+                                                ProgressView()
+                                            case .success(let image):
+                                                image
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 55, height: 55)
+                                                    .clipShape(Circle())
+                                                    .overlay(Circle().stroke(Color.pink.opacity(0.4), lineWidth: 2))
+                                            case .failure:
+                                                placeholderCircle
+                                            @unknown default:
+                                                placeholderCircle
+                                            }
+                                        }
+                                    } else {
+                                        placeholderCircle
+                                    }
+                                }
+                                .shadow(radius: 2)
                             }
                         }
                         .padding(.horizontal)
