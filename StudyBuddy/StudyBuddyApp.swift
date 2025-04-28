@@ -63,10 +63,3 @@ struct RootView: View {
     }
 }
 
-var body: some Scene {
-    WindowGroup {
-        ContentView()
-            .environmentObject(authViewModel)
-            .preferredColorScheme(.light)
-    }
-}

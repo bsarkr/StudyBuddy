@@ -5,18 +5,18 @@
 //  Created by Max Hazelton on 4/24/25.
 //
 
-import FirebaseFirestoreSwift
+import Foundation
 
-struct FlashcardTerm: Codable, Identifiable {
-    @DocumentID var id: String?
+struct FlashcardTerm: Identifiable {
+    var id = UUID()
     var term: String
     var definition: String
 }
 
-struct StudySet: Codable, Identifiable {
-    @DocumentID var id: String?
+struct StudySet: Identifiable {
+    var id: String? = nil
     var title: String
     var terms: [FlashcardTerm]
     var userId: String
-    var timestamp: Date = Date()
 }
+
