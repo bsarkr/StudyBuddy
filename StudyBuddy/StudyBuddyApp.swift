@@ -63,3 +63,20 @@ struct RootView: View {
     }
 }
 
+/*change view to this when done testing homepage
+
+ WindowGroup {
+    RootView()
+        .environmentObject(authViewModel)
+        .preferredColorScheme(.light)
+}
+
+OR
+ 
+ WindowGroup {
+     Homepage()
+         .environmentObject(authViewModel)
+         .preferredColorScheme(.light)
+ }
+ 
+*/
