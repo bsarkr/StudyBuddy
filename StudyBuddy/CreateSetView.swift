@@ -14,7 +14,7 @@ struct CreateSetView: View {
 
     @State private var title: String = ""
     @State private var terms: [FlashcardTerm] = [FlashcardTerm(term: "", definition: "")]
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -28,7 +28,7 @@ struct CreateSetView: View {
                         .padding(.horizontal)
 
                     List {
-                        ForEach(terms.indices, id: \.self) { index in
+                        ForEach($terms.indices, id: \.self) { index in
                             VStack(alignment: .leading) {
                                 TextField("Term", text: $terms[index].term)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -38,7 +38,7 @@ struct CreateSetView: View {
                             .padding(.vertical, 5)
                         }
                         .onDelete(perform: deleteTerm)
-                        
+
                         Button(action: {
                             terms.append(FlashcardTerm(term: "", definition: ""))
                         }) {
@@ -50,7 +50,7 @@ struct CreateSetView: View {
                         }
                     }
                     .listStyle(PlainListStyle())
-                    
+
                     Button(action: saveSet) {
                         Text("Save Set")
                             .fontWeight(.bold)
@@ -81,11 +81,25 @@ struct CreateSetView: View {
     func saveSet() {
         guard !title.isEmpty else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let newSet = StudySet(title: title, terms: terms, userId: uid)
-        viewModel.addSet(newSet)
-        dismiss()
+
+        var termDict: [String: String] = [:]
+        for card in terms {
+            if !card.term.isEmpty && !card.definition.isEmpty {
+                termDict[card.term] = card.definition
+            }
+        }
+
+        viewModel.saveSet(title: title, terms: termDict, userId: uid) { error in
+            if let error = error {
+                print("Failed to save set: \(error.localizedDescription)")
+            } else {
+                print("Set saved successfully!")
+                dismiss()
+            }
+        }
+
     }
-    
+
     func deleteTerm(at offsets: IndexSet) {
         terms.remove(atOffsets: offsets)
     }

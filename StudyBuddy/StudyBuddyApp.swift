@@ -18,7 +18,7 @@ struct StudyBuddyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            Homepage()
                 .environmentObject(authViewModel)
                 .preferredColorScheme(.light)
         }
