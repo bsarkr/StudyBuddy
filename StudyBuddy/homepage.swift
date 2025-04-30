@@ -85,7 +85,7 @@ struct Homepage: View {
                     .frame(height: 20) // 🔥 Shorter height now
                     .background(Color.pink)
 
-                    // 🔎 Search Bar
+                    //Search Bar
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.pink)
@@ -99,7 +99,7 @@ struct Homepage: View {
                     .padding(.horizontal)
                     .padding(.top, 45)
 
-                    // 📚 Main Content
+                    // Main Content
                     ScrollView {
                         VStack(alignment: .leading, spacing: 20) {
                                 
@@ -147,7 +147,7 @@ struct Homepage: View {
                                 .cornerRadius(20)
                                 .padding(.horizontal)
 
-                                // 🟰 Folders Section 🟰
+                                // -Folders Section-
                                 VStack(alignment: .leading, spacing: 10) {
                                     Text("Folders")
                                         .font(.title2)
@@ -177,7 +177,7 @@ struct Homepage: View {
                                     Spacer()
                                 }
                                 .padding(20)
-                                .frame(maxWidth: .infinity, alignment: .topLeading) // ✅ force top-left inside background
+                                .frame(maxWidth: .infinity, alignment: .topLeading)
                                 .frame(minHeight: 225)
                                 .background(Color(red: 1.0, green: 0.7, blue: 0.7))
                                 .cornerRadius(20)
@@ -200,9 +200,11 @@ struct Homepage: View {
                 .onChange(of: scenePhase) { newPhase in
                     if newPhase == .active {
                         fetchUserData()
+                        if let uid = Auth.auth().currentUser?.uid {
+                            setViewModel.fetchSets(for: uid)
+                        }
                     }
                 }
-
                 // ➕ Floating + Button
                 Button(action: {
                     showingCreateSet = true
@@ -305,14 +307,12 @@ struct Homepage: View {
 }
 
 
-//comment this out when done testing
-/*
 struct Homepage_Previews: PreviewProvider {
     static var previews: some View {
         Homepage()
             .environmentObject(AuthViewModel())
     }
 }
-*/
+
 
 
