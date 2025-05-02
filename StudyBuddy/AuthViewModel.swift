@@ -50,6 +50,7 @@ class AuthViewModel: ObservableObject {
     func signOut() {
         do {
             try Auth.auth().signOut()
+            UserDefaults.standard.removeObject(forKey: "profileImageURL")
             isLoggedIn = false
             hasCompletedSetup = false
             isEmailVerified = false

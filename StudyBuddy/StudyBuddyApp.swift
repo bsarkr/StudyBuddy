@@ -14,15 +14,15 @@ import FirebaseAppCheck
 struct StudyBuddyApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @StateObject var authViewModel = AuthViewModel()
+        @StateObject var authViewModel = AuthViewModel()
 
-    var body: some Scene {
-        WindowGroup {
-            Homepage()
-                .environmentObject(authViewModel)
-                .preferredColorScheme(.light)
+        var body: some Scene {
+            WindowGroup {
+                RootView()
+                    .environmentObject(authViewModel)
+                    .preferredColorScheme(.light)
+            }
         }
-    }
 }
 
 class AppDelegate: NSObject, UIApplicationDelegate {
