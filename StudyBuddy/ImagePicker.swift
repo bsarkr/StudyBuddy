@@ -22,12 +22,21 @@ struct ImagePicker: UIViewControllerRepresentable {
 
         func imagePickerController(_ picker: UIImagePickerController,
                                    didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let selectedImage = info[.originalImage] as? UIImage {
-                let flipped = picker.cameraDevice == .front
-                let finalImage = flipped ? selectedImage.flippedHorizontally() : selectedImage.fixedOrientation()
-                parent.image = finalImage
+            // Use the edited image if available (cropped version)
+            if let selectedImage = info[.editedImage] as? UIImage ?? info[.originalImage] as? UIImage {
+                if picker.sourceType == .camera {
+                    let flipped = picker.cameraDevice == .front
+                    let finalImage = flipped ? selectedImage.flippedHorizontally() : selectedImage.fixedOrientation()
+                    parent.image = finalImage
+                } else {
+                    parent.image = selectedImage.fixedOrientation()
+                }
             }
-            parent.presentationMode.wrappedValue.dismiss()
+
+            // Delay dismissal slightly
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [self] in
+                parent.presentationMode.wrappedValue.dismiss()
+            }
         }
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
@@ -48,8 +57,9 @@ struct ImagePicker: UIViewControllerRepresentable {
             picker.cameraDevice = .front
         }
 
-        picker.modalPresentationStyle = .overFullScreen //Forces immersive full screen
-        picker.view.backgroundColor = .black //Fills top/bottom with black
+        picker.allowsEditing = true  // 💥 Enables cropping
+        picker.modalPresentationStyle = .fullScreen
+        picker.view.backgroundColor = .black
         return picker
     }
 
@@ -57,7 +67,6 @@ struct ImagePicker: UIViewControllerRepresentable {
 }
 
 extension UIImage {
-    // Flip horizontally for selfies
     func flippedHorizontally() -> UIImage {
         UIGraphicsBeginImageContextWithOptions(size, false, scale)
         let context = UIGraphicsGetCurrentContext()
@@ -69,7 +78,6 @@ extension UIImage {
         return flipped ?? self
     }
 
-    // Normalize image orientation
     func fixedOrientation() -> UIImage {
         if imageOrientation == .up { return self }
         UIGraphicsBeginImageContextWithOptions(size, false, scale)
