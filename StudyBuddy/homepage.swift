@@ -1,9 +1,8 @@
 //
-// homepage.swift
-// StudyBuddy
+//  Homepage.swift
+//  StudyBuddy
 //
-// Created by Bilash Sarkar and Max Hazelton on 4/10/25
-
+//  Created by Bilash Sarkar and Max Hazelton on 4/10/25.
 
 import SwiftUI
 import FirebaseAuth
@@ -21,17 +20,14 @@ struct Homepage: View {
     @State private var firstName: String = "User"
     @State private var profileImageURL: String? = UserDefaults.standard.string(forKey: "profileImageURL")
     @State private var showingCreateSet = false
+    @State private var selectedTab = "home"
 
     @StateObject private var setViewModel = SetViewModel()
 
     let libraryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("library")
 
     var displayName: String {
-        if let preferred = preferredName, !preferred.isEmpty {
-            return preferred
-        } else {
-            return firstName
-        }
+        preferredName?.isEmpty == false ? preferredName! : firstName
     }
 
     var body: some View {
@@ -40,10 +36,8 @@ struct Homepage: View {
                 Color.pink.opacity(0.15).edgesIgnoringSafeArea(.all)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    
                     ZStack(alignment: .bottom) {
-                        Color.pink
-                            .ignoresSafeArea(edges: .top)
+                        Color.pink.ignoresSafeArea(edges: .top)
 
                         HStack {
                             Text("Hello, \(displayName)")
@@ -52,40 +46,15 @@ struct Homepage: View {
                                 .foregroundColor(.white)
                             Spacer()
                             NavigationLink(destination: UserAccountView().environmentObject(authViewModel)) {
-                                ZStack {
-                                    if let urlString = profileImageURL, let url = URL(string: urlString) {
-                                        AsyncImage(url: url) { phase in
-                                            switch phase {
-                                            case .empty:
-                                                ProgressView()
-                                            case .success(let image):
-                                                image
-                                                    .resizable()
-                                                    .scaledToFill()
-                                                    .frame(width: 55, height: 55)
-                                                    .clipShape(Circle())
-                                                    .overlay(Circle().stroke(Color.pink.opacity(0.4), lineWidth: 2))
-                                            case .failure:
-                                                placeholderCircle
-                                            @unknown default:
-                                                placeholderCircle
-                                            }
-                                        }
-                                    } else {
-                                        placeholderCircle
-                                    }
-                                }
-                                .shadow(radius: 2)
+                                profileImage
                             }
                         }
                         .padding(.horizontal)
-                        .padding(.top, 50) // for notch
+                        .padding(.top, 30)
                         .padding(.bottom, 10)
                     }
-                    .frame(height: 20) // 🔥 Shorter height now
-                    .background(Color.pink)
+                    .frame(height: 50)
 
-                    //Search Bar
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.pink)
@@ -97,94 +66,129 @@ struct Homepage: View {
                     .cornerRadius(14)
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.pink.opacity(0.4), lineWidth: 1))
                     .padding(.horizontal)
-                    .padding(.top, 45)
+                    .padding(.top, 25)
 
-                    // Main Content
                     ScrollView {
                         VStack(alignment: .leading, spacing: 20) {
-                                
-                                // 🟰 All Sets Section 🟰
-                                VStack(alignment: .leading, spacing: 10) {
-                                    Text("All Sets")
-                                        .font(.title2)
-                                        .foregroundColor(.white)
-                                        .padding(.bottom, 5)
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("All Sets")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                                    .padding(.bottom, 5)
 
-                                    if setViewModel.sets.isEmpty {
-                                        Text("No sets yet.")
-                                            .foregroundColor(.white.opacity(0.7))
-                                            .padding()
-                                            .background(Color.pink.opacity(0.4))
-                                            .cornerRadius(10)
-                                    } else {
-                                        ScrollView(.horizontal, showsIndicators: false) {
-                                            HStack(spacing: 16) {
-                                                ForEach(setViewModel.sets.filter {
-                                                    searchText.isEmpty || $0.title.localizedCaseInsensitiveContains(searchText)
-                                                }) { set in
-                                                    VStack(alignment: .leading, spacing: 5) {
-                                                        Text(set.title)
-                                                            .font(.headline)
-                                                            .foregroundColor(.white)
-                                                        Text("\(set.terms.count) terms")
-                                                            .font(.subheadline)
-                                                            .foregroundColor(.white.opacity(0.7))
-                                                    }
-                                                    .padding()
-                                                    .background(Color.pink.opacity(0.8))
-                                                    .cornerRadius(16)
-                                                }
-                                            }
-                                            .padding(.horizontal)
-                                        }
-                                    }
-                                    Spacer()
+                                let filteredSets = setViewModel.sets.filter {
+                                    searchText.isEmpty || $0.title.localizedCaseInsensitiveContains(searchText)
                                 }
-                                .padding(20)
-                                .frame(maxWidth: .infinity, alignment: .topLeading) //force top-left inside background
-                                .frame(minHeight: 225)
-                                .background(Color(red: 1.0, green: 0.7, blue: 0.7))
-                                .cornerRadius(20)
-                                .padding(.horizontal)
 
-                                // -Folders Section-
-                                VStack(alignment: .leading, spacing: 10) {
-                                    Text("Folders")
-                                        .font(.title2)
-                                        .foregroundColor(.white)
-                                        .padding(.bottom, 5)
-
-                                    if folders.isEmpty {
-                                        Text("No folders yet.")
-                                            .foregroundColor(.white.opacity(0.7))
-                                            .padding()
-                                            .background(Color.pink.opacity(0.4))
-                                            .cornerRadius(10)
-                                    } else {
-                                        ScrollView(.horizontal, showsIndicators: false) {
-                                            HStack(spacing: 16) {
-                                                ForEach(filteredFolders.map { $0.lastPathComponent }, id: \.self) { folder in
-                                                    Text(folder)
+                                if filteredSets.isEmpty {
+                                    Text("No sets yet.")
+                                        .foregroundColor(.white.opacity(0.7))
+                                        .padding()
+                                        .background(Color.pink.opacity(0.4))
+                                        .cornerRadius(10)
+                                } else {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        LazyHGrid(rows: [GridItem(.fixed(80)), GridItem(.fixed(80))], spacing: 16) {
+                                            ForEach(filteredSets, id: \.id) { set in
+                                                VStack(alignment: .leading, spacing: 5) {
+                                                    Text(set.title)
+                                                        .font(.headline)
                                                         .foregroundColor(.white)
-                                                        .padding()
-                                                        .background(Color.pink.opacity(0.6))
-                                                        .cornerRadius(12)
+                                                        .lineLimit(1)
+                                                        .truncationMode(.tail)
+                                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                                    Text("\(set.terms.count) terms")
+                                                        .font(.subheadline)
+                                                        .foregroundColor(.white.opacity(0.7))
                                                 }
+                                                .padding()
+                                                .frame(width: 150)
+                                                .background(Color.pink.opacity(0.8))
+                                                .cornerRadius(16)
                                             }
-                                            .padding(.horizontal)
                                         }
+                                        .padding(.horizontal, 10)
                                     }
-                                    Spacer()
+                                    .frame(height: 180)
                                 }
-                                .padding(20)
-                                .frame(maxWidth: .infinity, alignment: .topLeading)
-                                .frame(minHeight: 225)
-                                .background(Color(red: 1.0, green: 0.7, blue: 0.7))
-                                .cornerRadius(20)
-                                .padding(.horizontal)
+                                Spacer()
                             }
-                            .padding(.top)
+                            .padding(20)
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                            .frame(minHeight: 225)
+                            .background(Color(red: 1.0, green: 0.7, blue: 0.7))
+                            .cornerRadius(20)
+                            .padding(.horizontal)
+
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Folders")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                                    .padding(.bottom, 5)
+
+                                let folderNames = filteredFolders.map { $0.lastPathComponent }
+
+                                if folderNames.isEmpty {
+                                    Text("No folders yet.")
+                                        .foregroundColor(.white.opacity(0.7))
+                                        .padding()
+                                        .background(Color.pink.opacity(0.4))
+                                        .cornerRadius(10)
+                                } else {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        LazyHGrid(rows: [GridItem(.fixed(80)), GridItem(.fixed(80))], spacing: 16) {
+                                            ForEach(folderNames, id: \.self) { folder in
+                                                Text(folder)
+                                                    .font(.body)
+                                                    .foregroundColor(.white)
+                                                    .lineLimit(1)
+                                                    .truncationMode(.tail)
+                                                    .frame(width: 150, alignment: .leading)
+                                                    .padding()
+                                                    .background(Color.pink.opacity(0.6))
+                                                    .cornerRadius(12)
+                                            }
+                                        }
+                                        .padding(.horizontal, 10)
+                                    }
+                                    .frame(height: 180)
+                                }
+                                Spacer()
+                            }
+                            .padding(20)
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                            .frame(minHeight: 225)
+                            .background(Color(red: 1.0, green: 0.7, blue: 0.7))
+                            .cornerRadius(20)
+                            .padding(.horizontal)
                         }
+                        .padding(.top)
+                        .padding(.bottom, 50)
+                    }
+
+                    HStack {
+                        Spacer()
+                        tabBarItem(icon: "house.fill", tag: "home")
+                        Spacer()
+                        Button(action: { showingCreateSet = true }) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.pink)
+                                    .frame(width: 50, height: 50)
+                                Image(systemName: "plus")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 22, weight: .bold))
+                            }
+                            .shadow(radius: 3)
+                        }
+                        Spacer()
+                        tabBarItem(icon: "folder.fill", tag: "folder")
+                        Spacer()
+                        tabBarItem(icon: "person.2.fill", tag: "friends")
+                        Spacer()
+                    }
+                    .padding(.vertical, 8)
+                    .background(Color.white.opacity(0.95).edgesIgnoringSafeArea(.bottom))
                 }
                 .sheet(isPresented: $showingCreateSet) {
                     CreateSetView(viewModel: setViewModel)
@@ -205,25 +209,19 @@ struct Homepage: View {
                         }
                     }
                 }
-                // ➕ Floating + Button
-                Button(action: {
-                    showingCreateSet = true
-                }) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(Color.pink)
-                        .clipShape(Circle())
-                        .shadow(radius: 5)
-                }
-                .padding()
             }
             .navigationBarHidden(true)
         }
     }
 
-    // Profile Image View
+    func tabBarItem(icon: String, tag: String) -> some View {
+        Button(action: { selectedTab = tag }) {
+            Image(systemName: icon)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundColor(selectedTab == tag ? .pink : .gray)
+        }
+    }
+
     var profileImage: some View {
         ZStack {
             if let urlString = profileImageURL, let url = URL(string: urlString) {
@@ -232,10 +230,9 @@ struct Homepage: View {
                     case .empty:
                         ProgressView()
                     case .success(let image):
-                        image
-                            .resizable()
+                        image.resizable()
                             .scaledToFill()
-                            .frame(width: 44, height: 44)
+                            .frame(width: 55, height: 55)
                             .clipShape(Circle())
                             .overlay(Circle().stroke(Color.pink.opacity(0.4), lineWidth: 2))
                     case .failure:
@@ -248,7 +245,7 @@ struct Homepage: View {
                 placeholderCircle
             }
         }
-        .frame(width: 44, height: 44)
+        .frame(width: 55, height: 55)
         .shadow(radius: 2)
     }
 
@@ -256,21 +253,18 @@ struct Homepage: View {
         Circle()
             .fill(Color.white)
             .frame(width: 44, height: 44)
-            .overlay(
-                Text(String(displayName.prefix(1)))
-                    .font(.headline)
-                    .foregroundColor(.pink)
-            )
+            .overlay(Text(String(displayName.prefix(1))).font(.headline).foregroundColor(.pink))
     }
 
     var filteredFolders: [URL] {
-        searchText.isEmpty ? folders : folders.filter { $0.lastPathComponent.localizedCaseInsensitiveContains(searchText) }
+        searchText.isEmpty ? folders : folders.filter {
+            $0.lastPathComponent.localizedCaseInsensitiveContains(searchText)
+        }
     }
 
     func fetchUserData() {
         guard let user = Auth.auth().currentUser else { return }
-        let docRef = Firestore.firestore().collection("users").document(user.uid)
-        docRef.getDocument { snapshot, _ in
+        Firestore.firestore().collection("users").document(user.uid).getDocument { snapshot, _ in
             if let data = snapshot?.data() {
                 self.firstName = data["firstName"] as? String ?? "User"
                 self.preferredName = data["preferredName"] as? String
@@ -306,13 +300,9 @@ struct Homepage: View {
     }
 }
 
-
 struct Homepage_Previews: PreviewProvider {
     static var previews: some View {
         Homepage()
             .environmentObject(AuthViewModel())
     }
 }
-
-
-
