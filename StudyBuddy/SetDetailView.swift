@@ -2,7 +2,8 @@
 //  SetDetailView.swift
 //  StudyBuddy
 //
-//  Created by Max Hazelton on 5/4/25.
+//  Logic created by Max Hazelton on 5/4/25.
+//  Styled by Bilash on 5/5/25
 //
 
 import SwiftUI
@@ -12,76 +13,124 @@ struct SetDetailView: View {
 
     @EnvironmentObject var viewModel: SetViewModel
     @Environment(\.dismiss) var dismiss
+
+    @State private var showOptionsSheet = false
     @State private var isEditing = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(set.title)
-                .font(.largeTitle)
-                .bold()
-                .padding(.bottom)
+        NavigationStack {
+            ZStack(alignment: .topLeading) {
+                Color.pink.opacity(0.1).ignoresSafeArea()
 
-            if set.terms.isEmpty {
-                Text("No terms in this set.")
-                    .foregroundColor(.gray)
-            } else {
-                List(set.terms, id: \.id) { item in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.term)
-                            .font(.headline)
-                        Text(item.definition)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                VStack(spacing: 24) {
+                    Spacer().frame(height: 60)
+
+                    Text(set.title)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.pink)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+
+                    Button(action: {
+                        // Future: Navigate to game mode screen
+                    }) {
+                        Text("Learn")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.pink)
+                            .foregroundColor(.white)
+                            .cornerRadius(14)
+                            .shadow(color: Color.pink.opacity(0.3), radius: 4, x: 0, y: 3)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.horizontal)
+
+                    // Scrollable Flashcards
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            ForEach(set.terms, id: \.term) { card in
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(card.term)
+                                        .font(.headline)
+                                        .foregroundColor(.pink)
+
+                                    Text(card.definition)
+                                        .font(.body)
+                                        .foregroundColor(.black)
+                                        .padding()
+                                        .background(Color.white.opacity(0.9))
+                                        .cornerRadius(12)
+
+                                    Spacer(minLength: 10)
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
+                                .background(Color.white)
+                                .cornerRadius(16)
+                                .shadow(color: .gray.opacity(0.1), radius: 4, x: 0, y: 2)
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 80)
+                    }
                 }
-                .listStyle(.insetGrouped)
+
+                // Back Button
+                Button(action: {
+                    withAnimation {
+                        dismiss()
+                    }
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.title2)
+                        .foregroundColor(.pink)
+                        .padding(10)
+                        .background(Color.white)
+                        .clipShape(Circle())
+                        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                }
+                .padding(.leading, 16)
+                .padding(.top, 16)
+
+                // Options Button
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            showOptionsSheet = true
+                        }) {
+                            Image(systemName: "ellipsis")
+                                .font(.title2)
+                                .foregroundColor(.pink)
+                                .padding(10)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                        }
+                        .padding(.top, 16)
+                        .padding(.trailing, 16)
+                    }
+                    Spacer()
+                }
             }
-
-            Spacer()
-
-            Button("Learn") {
-                // Future: Navigate to game mode screen
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.pink)
-            .foregroundColor(.white)
-            .cornerRadius(12)
-
-            HStack(spacing: 16) {
-                Button("Edit") {
+        }
+        .navigationBarBackButtonHidden(true)
+        .sheet(isPresented: $showOptionsSheet) {
+            SetDetailsOptionsSheet(
+                onEdit: {
                     isEditing = true
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.orange)
-                .foregroundColor(.white)
-                .cornerRadius(12)
-
-                Button("Delete") {
+                    showOptionsSheet = false
+                },
+                onDelete: {
                     viewModel.deleteSet(set)
                     dismiss()
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.red)
-                .foregroundColor(.white)
-                .cornerRadius(12)
-            }
-
-            NavigationLink(
-                destination: EditSetView(viewModel: viewModel, set: set),
-                isActive: $isEditing
-            ) {
-                EmptyView()
-            }
+            )
+            .presentationDetents([.fraction(0.25)])
         }
-        .padding()
-        .navigationTitle("Set Details")
+        .navigationDestination(isPresented: $isEditing) {
+            EditSetView(viewModel: viewModel, set: set)
+        }
     }
 }
-
-
-
-
