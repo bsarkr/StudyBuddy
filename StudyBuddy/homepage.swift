@@ -32,142 +32,154 @@ struct Homepage: View {
 
     var body: some View {
         NavigationView {
-            ZStack(alignment: .bottomTrailing) {
-                Color.pink.opacity(0.15).edgesIgnoringSafeArea(.all)
+            ZStack {
+                Color.pink.opacity(0.15).ignoresSafeArea()
 
-                VStack(alignment: .leading, spacing: 10) {
-                    ZStack(alignment: .bottom) {
-                        Color.pink.ignoresSafeArea(edges: .top)
+                VStack(spacing: 0) {
+                    if selectedTab == "folder" {
+                        LibraryView()
+                            .environmentObject(authViewModel)
+                    } else if selectedTab == "friends" {
+                        SocialView()
+                    } else {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ZStack(alignment: .bottom) {
+                                Color.pink.ignoresSafeArea(edges: .top)
 
-                        HStack {
-                            Text("Hello, \(displayName)")
-                                .font(.largeTitle)
-                                .bold()
-                                .foregroundColor(.white)
-                            Spacer()
-                            NavigationLink(destination: UserAccountView().environmentObject(authViewModel)) {
-                                profileImage
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, 30)
-                        .padding(.bottom, 10)
-                    }
-                    .frame(height: 50)
-
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.pink)
-                        TextField("Search sets or folders...", text: $searchText)
-                            .foregroundColor(.pink)
-                    }
-                    .padding()
-                    .background(Color.white.opacity(0.9))
-                    .cornerRadius(14)
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.pink.opacity(0.4), lineWidth: 1))
-                    .padding(.horizontal)
-                    .padding(.top, 25)
-
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 20) {
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text("All Sets")
-                                    .font(.title2)
-                                    .foregroundColor(.white)
-                                    .padding(.bottom, 5)
-
-                                let filteredSets = setViewModel.sets.filter {
-                                    searchText.isEmpty || $0.title.localizedCaseInsensitiveContains(searchText)
+                                HStack {
+                                    Text("Hello, \(displayName)")
+                                        .font(.largeTitle)
+                                        .bold()
+                                        .foregroundColor(.white)
+                                    Spacer()
+                                    NavigationLink(destination: UserAccountView().environmentObject(authViewModel)) {
+                                        profileImage
+                                    }
                                 }
+                                .padding(.horizontal)
+                                .padding(.top, 30)
+                                .padding(.bottom, 10)
+                            }
+                            .frame(height: 50)
 
-                                if filteredSets.isEmpty {
-                                    Text("No sets yet.")
-                                        .foregroundColor(.white.opacity(0.7))
-                                        .padding()
-                                        .background(Color.pink.opacity(0.4))
-                                        .cornerRadius(10)
-                                } else {
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        LazyHGrid(rows: [GridItem(.fixed(80)), GridItem(.fixed(80))], spacing: 16) {
-                                            ForEach(filteredSets, id: \ .id) { set in
-                                                NavigationLink(destination: SetDetailView(set: set).environmentObject(setViewModel)) {
-                                                    VStack(alignment: .leading, spacing: 5) {
-                                                        Text(set.title)
-                                                            .font(.headline)
+                            HStack {
+                                Image(systemName: "magnifyingglass")
+                                    .foregroundColor(.pink)
+                                TextField("Search sets or folders...", text: $searchText)
+                                    .foregroundColor(.pink)
+                            }
+                            .padding()
+                            .background(Color.white.opacity(0.9))
+                            .cornerRadius(14)
+                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.pink.opacity(0.4), lineWidth: 1))
+                            .padding(.horizontal)
+                            .padding(.top, 25)
+
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 20) {
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        Text("All Sets")
+                                            .font(.title2)
+                                            .foregroundColor(.white)
+                                            .padding(.bottom, 5)
+
+                                        let filteredSets = setViewModel.sets.filter {
+                                            searchText.isEmpty || $0.title.localizedCaseInsensitiveContains(searchText)
+                                        }
+
+                                        if filteredSets.isEmpty {
+                                            Text("No sets yet.")
+                                                .foregroundColor(.white.opacity(0.7))
+                                                .padding()
+                                                .background(Color.pink.opacity(0.4))
+                                                .cornerRadius(10)
+                                        } else {
+                                            ScrollView(.horizontal, showsIndicators: false) {
+                                                LazyHGrid(rows: [GridItem(.fixed(80)), GridItem(.fixed(80))], spacing: 16) {
+                                                    ForEach(filteredSets, id: \.id) { set in
+                                                        NavigationLink(destination: SetDetailView(set: set).environmentObject(setViewModel)) {
+                                                            VStack(alignment: .leading, spacing: 5) {
+                                                                Text(set.title)
+                                                                    .font(.headline)
+                                                                    .foregroundColor(.white)
+                                                                    .lineLimit(1)
+                                                                    .truncationMode(.tail)
+                                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                                                Text("\(set.terms.count) terms")
+                                                                    .font(.subheadline)
+                                                                    .foregroundColor(.white.opacity(0.7))
+                                                            }
+                                                            .padding()
+                                                            .frame(width: 150)
+                                                            .background(Color.pink.opacity(0.8))
+                                                            .cornerRadius(16)
+                                                        }
+                                                    }
+                                                }
+                                                .padding(.horizontal, 10)
+                                            }
+                                            .frame(height: 180)
+                                        }
+                                        Spacer()
+                                    }
+                                    .padding(20)
+                                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                                    .frame(minHeight: 225)
+                                    .background(Color(red: 1.0, green: 0.7, blue: 0.7))
+                                    .cornerRadius(20)
+                                    .padding(.horizontal)
+
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        Text("Folders")
+                                            .font(.title2)
+                                            .foregroundColor(.white)
+                                            .padding(.bottom, 5)
+
+                                        let folderNames = filteredFolders.map { $0.lastPathComponent }
+
+                                        if folderNames.isEmpty {
+                                            Text("No folders yet.")
+                                                .foregroundColor(.white.opacity(0.7))
+                                                .padding()
+                                                .background(Color.pink.opacity(0.4))
+                                                .cornerRadius(10)
+                                        } else {
+                                            ScrollView(.horizontal, showsIndicators: false) {
+                                                LazyHGrid(rows: [GridItem(.fixed(80)), GridItem(.fixed(80))], spacing: 16) {
+                                                    ForEach(folderNames, id: \.self) { folder in
+                                                        Text(folder)
+                                                            .font(.body)
                                                             .foregroundColor(.white)
                                                             .lineLimit(1)
                                                             .truncationMode(.tail)
-                                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                                        Text("\(set.terms.count) terms")
-                                                            .font(.subheadline)
-                                                            .foregroundColor(.white.opacity(0.7))
+                                                            .frame(width: 150, alignment: .leading)
+                                                            .padding()
+                                                            .background(Color.pink.opacity(0.6))
+                                                            .cornerRadius(12)
                                                     }
-                                                    .padding()
-                                                    .frame(width: 150)
-                                                    .background(Color.pink.opacity(0.8))
-                                                    .cornerRadius(16)
                                                 }
+                                                .padding(.horizontal, 10)
                                             }
+                                            .frame(height: 180)
                                         }
-                                        .padding(.horizontal, 10)
+                                        Spacer()
                                     }
-                                    .frame(height: 180)
+                                    .padding(20)
+                                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                                    .frame(minHeight: 225)
+                                    .background(Color(red: 1.0, green: 0.7, blue: 0.7))
+                                    .cornerRadius(20)
+                                    .padding(.horizontal)
                                 }
-                                Spacer()
+                                .padding(.top)
+                                .padding(.bottom, 80)
                             }
-                            .padding(20)
-                            .frame(maxWidth: .infinity, alignment: .topLeading)
-                            .frame(minHeight: 225)
-                            .background(Color(red: 1.0, green: 0.7, blue: 0.7))
-                            .cornerRadius(20)
-                            .padding(.horizontal)
-
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text("Folders")
-                                    .font(.title2)
-                                    .foregroundColor(.white)
-                                    .padding(.bottom, 5)
-
-                                let folderNames = filteredFolders.map { $0.lastPathComponent }
-
-                                if folderNames.isEmpty {
-                                    Text("No folders yet.")
-                                        .foregroundColor(.white.opacity(0.7))
-                                        .padding()
-                                        .background(Color.pink.opacity(0.4))
-                                        .cornerRadius(10)
-                                } else {
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        LazyHGrid(rows: [GridItem(.fixed(80)), GridItem(.fixed(80))], spacing: 16) {
-                                            ForEach(folderNames, id: \ .self) { folder in
-                                                Text(folder)
-                                                    .font(.body)
-                                                    .foregroundColor(.white)
-                                                    .lineLimit(1)
-                                                    .truncationMode(.tail)
-                                                    .frame(width: 150, alignment: .leading)
-                                                    .padding()
-                                                    .background(Color.pink.opacity(0.6))
-                                                    .cornerRadius(12)
-                                            }
-                                        }
-                                        .padding(.horizontal, 10)
-                                    }
-                                    .frame(height: 180)
-                                }
-                                Spacer()
-                            }
-                            .padding(20)
-                            .frame(maxWidth: .infinity, alignment: .topLeading)
-                            .frame(minHeight: 225)
-                            .background(Color(red: 1.0, green: 0.7, blue: 0.7))
-                            .cornerRadius(20)
-                            .padding(.horizontal)
                         }
-                        .padding(.top)
-                        .padding(.bottom, 50)
                     }
+                }
 
+                VStack {
+                    Spacer()
                     HStack {
                         Spacer()
                         tabBarItem(icon: "house.fill", tag: "home")
@@ -190,30 +202,34 @@ struct Homepage: View {
                         Spacer()
                     }
                     .padding(.vertical, 8)
-                    .background(Color.white.opacity(0.95).edgesIgnoringSafeArea(.bottom))
-                }
-                .sheet(isPresented: $showingCreateSet) {
-                    CreateSetView(viewModel: setViewModel)
-                }
-                .onAppear {
-                    createLibraryDirectoryIfNeeded()
-                    fetchUserData()
-                    loadFoldersAndSets()
-                    if let uid = Auth.auth().currentUser?.uid {
-                        setViewModel.fetchSets(for: uid)
-                    }
-                }
-                .onChange(of: scenePhase) { newPhase in
-                    if newPhase == .active {
-                        fetchUserData()
-                        if let uid = Auth.auth().currentUser?.uid {
-                            setViewModel.fetchSets(for: uid)
-                        }
-                    }
+                    .background(Color.white.opacity(0.95))
                 }
             }
             .navigationBarHidden(true)
+            .onTapGesture {
+                UIApplication.shared.endEditing()
+            }
         }
+        .sheet(isPresented: $showingCreateSet) {
+            CreateSetView(viewModel: setViewModel)
+        }
+        .onAppear {
+            createLibraryDirectoryIfNeeded()
+            fetchUserData()
+            loadFoldersAndSets()
+            if let uid = Auth.auth().currentUser?.uid {
+                setViewModel.fetchSets(for: uid)
+            }
+        }
+        .onChange(of: scenePhase) { newPhase in
+            if newPhase == .active {
+                fetchUserData()
+                if let uid = Auth.auth().currentUser?.uid {
+                    setViewModel.fetchSets(for: uid)
+                }
+            }
+        }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
     func tabBarItem(icon: String, tag: String) -> some View {

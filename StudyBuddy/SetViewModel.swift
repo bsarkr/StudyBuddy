@@ -35,7 +35,7 @@ class SetViewModel: ObservableObject {
             }
     }
 
-    //Fetch sets from: /users/{userId}/sets
+    // Fetch sets from: /users/{userId}/sets
     func fetchSets(for userId: String) {
         db.collection("users")
             .document(userId)
@@ -45,29 +45,14 @@ class SetViewModel: ObservableObject {
                 guard let documents = snapshot?.documents else { return }
 
                 self.sets = documents.compactMap { doc in
-                    let data = doc.data()
-                    guard let title = data["title"] as? String,
-                          let userId = data["userId"] as? String,
-                          let termsArray = data["terms"] as? [[String: String]] else {
-                        return nil
-                    }
-
-                    let terms = termsArray.compactMap { dict in
-                        if let term = dict["term"], let definition = dict["definition"] {
-                            return FlashcardTerm(term: term, definition: definition)
-                        } else {
-                            return nil
-                        }
-                    }
-
-                    return StudySet(id: doc.documentID, title: title, terms: terms, userId: userId)
+                    return StudySet(id: doc.documentID, data: doc.data())
                 }
             }
     }
 
-    //delete a set
+    // Delete a set
     func deleteSet(_ set: StudySet) {
-        guard let id = set.id else { return }
+        let id = set.id
 
         db.collection("users")
             .document(set.userId)
@@ -94,5 +79,3 @@ class SetViewModel: ObservableObject {
     }
 
 }
-
-
