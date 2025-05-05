@@ -74,19 +74,21 @@ struct LibraryView: View {
                                             .padding(.leading)
                                         
                                         ForEach(section.value.sorted(by: { $0.timestamp.dateValue() > $1.timestamp.dateValue() }), id: \.id) { set in
-                                            VStack(alignment: .leading) {
-                                                Text(set.title)
-                                                    .font(.headline)
-                                                    .foregroundColor(.white)
-                                                Text("\(set.terms.count) terms")
-                                                    .font(.subheadline)
-                                                    .foregroundColor(.white.opacity(0.8))
+                                            NavigationLink(destination: SetDetailView(set: set).environmentObject(setViewModel)) {
+                                                VStack(alignment: .leading) {
+                                                    Text(set.title)
+                                                        .font(.headline)
+                                                        .foregroundColor(.white)
+                                                    Text("\(set.terms.count) terms")
+                                                        .font(.subheadline)
+                                                        .foregroundColor(.white.opacity(0.8))
+                                                }
+                                                .padding()
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .background(Color.pink.opacity(0.8))
+                                                .cornerRadius(10)
+                                                .padding(.horizontal)
                                             }
-                                            .padding()
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .background(Color.pink.opacity(0.8))
-                                            .cornerRadius(10)
-                                            .padding(.horizontal)
                                         }
                                     }
                                 }
