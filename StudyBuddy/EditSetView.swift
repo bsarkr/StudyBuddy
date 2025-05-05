@@ -37,7 +37,7 @@ struct EditSetView: View {
                         .padding(.horizontal)
 
                     List {
-                        ForEach($terms.indices, id: \ .self) { index in
+                        ForEach($terms.indices, id: \.self) { index in
                             FlashcardTermView(term: $terms[index])
                                 .listRowSeparator(.hidden)
                                 .listRowInsets(EdgeInsets())
@@ -113,9 +113,11 @@ struct EditSetView: View {
     }
 
     func saveChanges() {
-        guard !title.isEmpty, let id = existingSet.id else { return }
+        guard !title.isEmpty else { return }
 
+        let id = existingSet.id
         var termDict: [String: String] = [:]
+
         for card in terms {
             if !card.term.isEmpty && !card.definition.isEmpty {
                 termDict[card.term] = card.definition
@@ -132,4 +134,3 @@ struct EditSetView: View {
         }
     }
 }
-
