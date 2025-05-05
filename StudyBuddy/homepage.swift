@@ -39,10 +39,9 @@ struct Homepage: View {
                     if selectedTab == "folder" {
                         LibraryView()
                             .environmentObject(authViewModel)
-                    }
-                    else if selectedTab == "friends"{
+                    } else if selectedTab == "friends" {
                         SocialView()
-                    }else {
+                    } else {
                         VStack(alignment: .leading, spacing: 10) {
                             ZStack(alignment: .bottom) {
                                 Color.pink.ignoresSafeArea(edges: .top)
@@ -97,22 +96,24 @@ struct Homepage: View {
                                         } else {
                                             ScrollView(.horizontal, showsIndicators: false) {
                                                 LazyHGrid(rows: [GridItem(.fixed(80)), GridItem(.fixed(80))], spacing: 16) {
-                                                    ForEach(filteredSets, id: \ .id) { set in
-                                                        VStack(alignment: .leading, spacing: 5) {
-                                                            Text(set.title)
-                                                                .font(.headline)
-                                                                .foregroundColor(.white)
-                                                                .lineLimit(1)
-                                                                .truncationMode(.tail)
-                                                                .frame(maxWidth: .infinity, alignment: .leading)
-                                                            Text("\(set.terms.count) terms")
-                                                                .font(.subheadline)
-                                                                .foregroundColor(.white.opacity(0.7))
+                                                    ForEach(filteredSets, id: \.id) { set in
+                                                        NavigationLink(destination: SetDetailView(set: set).environmentObject(setViewModel)) {
+                                                            VStack(alignment: .leading, spacing: 5) {
+                                                                Text(set.title)
+                                                                    .font(.headline)
+                                                                    .foregroundColor(.white)
+                                                                    .lineLimit(1)
+                                                                    .truncationMode(.tail)
+                                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                                                Text("\(set.terms.count) terms")
+                                                                    .font(.subheadline)
+                                                                    .foregroundColor(.white.opacity(0.7))
+                                                            }
+                                                            .padding()
+                                                            .frame(width: 150)
+                                                            .background(Color.pink.opacity(0.8))
+                                                            .cornerRadius(16)
                                                         }
-                                                        .padding()
-                                                        .frame(width: 150)
-                                                        .background(Color.pink.opacity(0.8))
-                                                        .cornerRadius(16)
                                                     }
                                                 }
                                                 .padding(.horizontal, 10)
@@ -145,7 +146,7 @@ struct Homepage: View {
                                         } else {
                                             ScrollView(.horizontal, showsIndicators: false) {
                                                 LazyHGrid(rows: [GridItem(.fixed(80)), GridItem(.fixed(80))], spacing: 16) {
-                                                    ForEach(folderNames, id: \ .self) { folder in
+                                                    ForEach(folderNames, id: \.self) { folder in
                                                         Text(folder)
                                                             .font(.body)
                                                             .foregroundColor(.white)
@@ -323,4 +324,3 @@ struct Homepage_Previews: PreviewProvider {
             .environmentObject(AuthViewModel())
     }
 }
-
