@@ -210,7 +210,7 @@ struct Homepage: View {
                 UIApplication.shared.endEditing()
             }
         }
-        .sheet(isPresented: $showingCreateSet) {
+        .fullScreenCover(isPresented: $showingCreateSet) {
             CreateSetView(viewModel: setViewModel)
         }
         .onAppear {

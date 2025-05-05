@@ -38,6 +38,8 @@ struct CreateSetView: View {
                 Color.pink.opacity(0.15).ignoresSafeArea()
 
                 VStack(spacing: 20) {
+                    Spacer().frame(height: 10)
+                    
                     Button(action: {
                         showingAI = true
                     }) {
@@ -51,6 +53,7 @@ struct CreateSetView: View {
                             .cornerRadius(12)
                             .shadow(color: .pink.opacity(0.2), radius: 3, x: 0, y: 2)
                     }
+                    .padding(.top,5)
                     .padding(.horizontal)
 
                     TextField("Set Title", text: $title)
@@ -107,6 +110,7 @@ struct CreateSetView: View {
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
                     .background(Color.clear)
+                    
 
                     Button(action: saveSet) {
                         Text("Save Set")
@@ -160,7 +164,7 @@ struct CreateSetView: View {
                 print("Failed to save set: \(error.localizedDescription)")
             } else {
                 print("Set saved successfully!")
-                didSaveExternally = true //notifing parent view to dismiss
+                didSaveExternally = true //telling parent view to dismiss
                 dismiss()
             }
         }
