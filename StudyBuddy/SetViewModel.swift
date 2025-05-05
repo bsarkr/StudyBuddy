@@ -75,6 +75,24 @@ class SetViewModel: ObservableObject {
             .document(id)
             .delete()
     }
+    
+    func updateSet(id: String, title: String, terms: [String: String], userId: String) {
+        let termsArray = terms.map { ["term": $0.key, "definition": $0.value] }
+        let data: [String: Any] = [
+            "id": id,
+            "title": title,
+            "terms": termsArray,
+            "userId": userId,
+            "timestamp": Timestamp(date: Date())
+        ]
+
+        db.collection("users")
+            .document(userId)
+            .collection("sets")
+            .document(id)
+            .setData(data, merge: true)
+    }
+
 }
 
 
