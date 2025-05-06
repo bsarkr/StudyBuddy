@@ -87,10 +87,21 @@ struct LoginView: View {
         errorMessage = nil
 
         if isCreatingAccount {
+            guard !email.isEmpty, !password.isEmpty else {
+                errorMessage = "Please fill out all fields."
+                return
+            }
+
             authViewModel.isCreatingAccount = true
             goToSetup = true
         } else {
+            guard !email.isEmpty, !password.isEmpty else {
+                errorMessage = "Please fill out all fields."
+                return
+            }
+
             authViewModel.isCreatingAccount = false
+
             Auth.auth().signIn(withEmail: email, password: password) { result, error in
                 DispatchQueue.main.async {
                     if let error = error as NSError? {

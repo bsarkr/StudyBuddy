@@ -18,9 +18,13 @@ struct UserPersonalView: View {
     @State private var profileImage: UIImage? = nil
     @State private var selectedItem: PhotosPickerItem?
     @State private var bio = ""
+    @State private var username = ""
     @State private var errorMessage: String?
     @State private var goToHome = false
-    
+    @State private var isUsernameAvailable: Bool? = nil
+    @State private var usernameCheckTask: DispatchWorkItem?
+    @State private var checkingUsername = false
+
     @State private var showImagePicker = false
     @State private var imagePickerSource: UIImagePickerController.SourceType = .photoLibrary
 
@@ -71,8 +75,31 @@ struct UserPersonalView: View {
                     .fullScreenCover(isPresented: $showImagePicker) {
                         ImagePicker(sourceType: imagePickerSource, image: $profileImage)
                             .id(UUID())
-                            .edgesIgnoringSafeArea(.all) // just in case
+                            .edgesIgnoringSafeArea(.all)
                     }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("Username*", text: $username)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                            .onChange(of: username) { _ in
+                                debounceUsernameCheck()
+                            }
+
+                        if checkingUsername {
+                            Text("Checking username availability...")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        } else if let available = isUsernameAvailable {
+                            Text(available ? "✅ Username available" : "❌ Username taken")
+                                .font(.caption)
+                                .foregroundColor(available ? .green : .red)
+                        }
+                    }
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .padding(.horizontal)
 
                     TextField("Bio (optional)", text: $bio)
                         .padding()
@@ -108,11 +135,65 @@ struct UserPersonalView: View {
         }
     }
 
+    func debounceUsernameCheck() {
+        usernameCheckTask?.cancel()
+
+        let task = DispatchWorkItem {
+            checkUsernameAvailability(username)
+        }
+
+        usernameCheckTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: task)
+    }
+
+    func checkUsernameAvailability(_ username: String) {
+        checkingUsername = true
+        let db = Firestore.firestore()
+        db.collection("users")
+            .whereField("username", isEqualTo: username)
+            .getDocuments { snapshot, error in
+                checkingUsername = false
+
+                if let error = error {
+                    print("Username check error: \(error.localizedDescription)")
+                    isUsernameAvailable = nil
+                    return
+                }
+
+                guard let snapshot = snapshot else {
+                    isUsernameAvailable = nil
+                    return
+                }
+
+                let taken = snapshot.documents.contains {
+                    let theirUsername = $0.get("username") as? String
+                    return theirUsername?.lowercased() == username.lowercased()
+                }
+
+                isUsernameAvailable = !taken
+            }
+    }
+
     func saveUserData() {
         guard let user = Auth.auth().currentUser else { return }
 
+        guard !username.isEmpty else {
+            errorMessage = "Username is required."
+            return
+        }
+
+        if checkingUsername {
+            errorMessage = "Still checking username availability. Please wait."
+            return
+        }
+
+        guard isUsernameAvailable == true else {
+            errorMessage = "Please choose a unique username."
+            return
+        }
+
         let uid = user.uid
-        var updateData: [String: Any] = [:]
+        var updateData: [String: Any] = ["username": username]
 
         if !bio.isEmpty {
             updateData["bio"] = bio
