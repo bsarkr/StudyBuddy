@@ -19,7 +19,7 @@ struct CreateFolderView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(red: 0.75, green: 0.65, blue: 1.0)
+                Color(red: 0.88, green: 0.82, blue: 1.0)
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {

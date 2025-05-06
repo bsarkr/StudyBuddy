@@ -169,7 +169,7 @@ struct Homepage: View {
                                                         }
                                                         .padding()
                                                         .frame(width: 150, alignment: .leading)
-                                                        .background(Color.pink.opacity(0.6))
+                                                        .background(Color.purple.opacity(0.7))
                                                         .cornerRadius(12)
                                                     }
                                                 }
