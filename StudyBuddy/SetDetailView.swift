@@ -16,6 +16,7 @@ struct SetDetailView: View {
 
     @State private var showOptionsSheet = false
     @State private var isEditing = false
+    @State private var showGameSelection = false
 
     var body: some View {
         NavigationStack {
@@ -33,7 +34,7 @@ struct SetDetailView: View {
                         .padding(.horizontal)
 
                     Button(action: {
-                        // Future: Navigate to game mode screen
+                        showGameSelection = true
                     }) {
                         Text("Learn")
                             .fontWeight(.semibold)
@@ -131,6 +132,9 @@ struct SetDetailView: View {
         }
         .navigationDestination(isPresented: $isEditing) {
             EditSetView(viewModel: viewModel, set: set)
+        }
+        .navigationDestination(isPresented: $showGameSelection) {
+            GameSelectionView(set: set)
         }
     }
 }
