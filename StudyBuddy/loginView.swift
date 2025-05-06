@@ -17,6 +17,7 @@ struct LoginView: View {
     @State private var isCreatingAccount = false
     @State private var errorMessage: String?
     @State private var goToSetup = false
+    @State private var showForgotPassword = false
 
     var body: some View {
         NavigationStack {
@@ -64,6 +65,18 @@ struct LoginView: View {
                     .padding(.horizontal, 30)
                     .shadow(radius: 5)
 
+                    // Forgot Password button for login mode only
+                    if !isCreatingAccount {
+                        Button(action: {
+                            showForgotPassword = true
+                        }) {
+                            Text("Forgot Password?")
+                                .font(.footnote)
+                                .foregroundColor(.pink)
+                                .underline()
+                        }
+                    }
+
                     Button(action: {
                         isCreatingAccount.toggle()
                         errorMessage = nil
@@ -78,6 +91,9 @@ struct LoginView: View {
                 .navigationDestination(isPresented: $goToSetup) {
                     UserSetupView(email: email, password: password)
                         .environmentObject(authViewModel)
+                }
+                .navigationDestination(isPresented: $showForgotPassword) {
+                    ForgotPasswordView()
                 }
             }
         }
