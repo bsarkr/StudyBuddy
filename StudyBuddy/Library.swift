@@ -18,9 +18,12 @@ struct LibraryView: View {
     @State private var allSets: [StudySet] = []
     @State private var groupedSets: [(key: String, value: [StudySet])] = []
 
+    @State private var allFolders: [StudyFolder] = []
+    @State private var groupedFolders: [(key: String, value: [StudyFolder])] = []
+
     var body: some View {
         ZStack {
-            Color.clear // Allows background tap gesture to dismiss keyboard
+            Color.clear
 
             VStack(alignment: .leading, spacing: 0) {
                 ZStack(alignment: .bottomLeading) {
@@ -36,7 +39,7 @@ struct LibraryView: View {
 
                 Picker("", selection: $selectedTab) {
                     Text("Sets").tag("sets")
-                    Text("Folders").tag("folders") // Placeholder
+                    Text("Folders").tag("folders")
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .padding()
@@ -44,7 +47,7 @@ struct LibraryView: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.pink)
-                    TextField("Search sets...", text: $searchText)
+                    TextField("Search...", text: $searchText)
                         .foregroundColor(.pink)
                 }
                 .padding()
@@ -72,7 +75,7 @@ struct LibraryView: View {
                                         Text(section.key)
                                             .font(.headline)
                                             .padding(.leading)
-                                        
+
                                         ForEach(section.value.sorted(by: { $0.timestamp.dateValue() > $1.timestamp.dateValue() }), id: \.id) { set in
                                             NavigationLink(destination: SetDetailView(set: set).environmentObject(setViewModel)) {
                                                 VStack(alignment: .leading) {
@@ -94,10 +97,45 @@ struct LibraryView: View {
                                 }
                             }
                         } else {
-                            Text("Folders view is not yet implemented.")
-                                .foregroundColor(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity)
+                            let filtered = allFolders.filter {
+                                searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText)
+                            }
+                            let grouped = groupFoldersByMonth(filtered)
+
+                            if grouped.isEmpty {
+                                Text("No folders found.")
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                            } else {
+                                ForEach(grouped, id: \.key) { section in
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        Text(section.key)
+                                            .font(.headline)
+                                            .padding(.leading)
+
+                                        ForEach(section.value.sorted(by: { $0.timestamp.dateValue() > $1.timestamp.dateValue() }), id: \.id) { folder in
+                                            let totalTerms = folder.setIDs.reduce(0) { count, setID in
+                                                count + (setViewModel.sets.first { $0.id == setID }?.terms.count ?? 0)
+                                            }
+
+                                            VStack(alignment: .leading) {
+                                                Text(folder.name)
+                                                    .font(.headline)
+                                                    .foregroundColor(.white)
+                                                Text("\(totalTerms) terms")
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.white.opacity(0.8))
+                                            }
+                                            .padding()
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .background(Color.purple.opacity(0.7))
+                                            .cornerRadius(10)
+                                            .padding(.horizontal)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     .padding(.top, 20)
@@ -111,6 +149,7 @@ struct LibraryView: View {
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .onAppear {
             fetchSetsFromFirebase()
+            fetchFoldersFromFirebase()
         }
     }
 
@@ -119,19 +158,30 @@ struct LibraryView: View {
         formatter.dateFormat = "MMMM yyyy"
 
         var grouped = [String: [StudySet]]()
-
         for set in sets {
-            let date = set.timestamp.dateValue()
-            let key = formatter.string(from: date)
+            let key = formatter.string(from: set.timestamp.dateValue())
             grouped[key, default: []].append(set)
         }
 
-        // Sort months descending by actual date, not just string key
         let sortedKeys = grouped.keys.sorted {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MMMM yyyy"
-            guard let date1 = formatter.date(from: $0), let date2 = formatter.date(from: $1) else { return false }
-            return date1 > date2
+            formatter.date(from: $0)! > formatter.date(from: $1)!
+        }
+
+        return sortedKeys.map { ($0, grouped[$0] ?? []) }
+    }
+
+    func groupFoldersByMonth(_ folders: [StudyFolder]) -> [(key: String, value: [StudyFolder])] {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+
+        var grouped = [String: [StudyFolder]]()
+        for folder in folders {
+            let key = formatter.string(from: folder.timestamp.dateValue())
+            grouped[key, default: []].append(folder)
+        }
+
+        let sortedKeys = grouped.keys.sorted {
+            formatter.date(from: $0)! > formatter.date(from: $1)!
         }
 
         return sortedKeys.map { ($0, grouped[$0] ?? []) }
@@ -145,18 +195,30 @@ struct LibraryView: View {
             .document(uid)
             .collection("sets")
             .getDocuments { snapshot, error in
-                if let error = error {
-                    print("Error fetching sets: \(error)")
-                    return
+                guard let documents = snapshot?.documents, error == nil else { return }
+                let fetched = documents.compactMap { doc in
+                    StudySet(id: doc.documentID, data: doc.data())
                 }
+                self.allSets = fetched
+                self.groupedSets = groupByMonth(fetched)
+                self.setViewModel.sets = fetched 
+            }
+    }
 
-                if let documents = snapshot?.documents {
-                    let fetchedSets = documents.compactMap { doc -> StudySet? in
-                        return StudySet(id: doc.documentID, data: doc.data())
-                    }
-                    self.allSets = fetchedSets
-                    self.groupedSets = groupByMonth(fetchedSets)
+    func fetchFoldersFromFirebase() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+
+        Firestore.firestore()
+            .collection("users")
+            .document(uid)
+            .collection("folders")
+            .getDocuments { snapshot, error in
+                guard let documents = snapshot?.documents, error == nil else { return }
+                let fetched = documents.compactMap { doc in
+                    StudyFolder(id: doc.documentID, data: doc.data())
                 }
+                self.allFolders = fetched
+                self.groupedFolders = groupFoldersByMonth(fetched)
             }
     }
 }

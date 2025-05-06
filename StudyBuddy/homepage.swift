@@ -1,4 +1,3 @@
-//
 //  Homepage.swift
 //  StudyBuddy
 //
@@ -20,7 +19,11 @@ struct Homepage: View {
     @State private var firstName: String = "User"
     @State private var profileImageURL: String? = UserDefaults.standard.string(forKey: "profileImageURL")
     @State private var showingCreateSet = false
+    @State private var showingAddOptions = false
     @State private var selectedTab = "home"
+    @State private var showCreateFolderView = false
+
+    @State private var firebaseFolders: [StudyFolder] = []
 
     @StateObject private var setViewModel = SetViewModel()
 
@@ -77,6 +80,7 @@ struct Homepage: View {
 
                             ScrollView {
                                 VStack(alignment: .leading, spacing: 20) {
+                                    // Sets Section
                                     VStack(alignment: .leading, spacing: 10) {
                                         Text("All Sets")
                                             .font(.title2)
@@ -129,15 +133,18 @@ struct Homepage: View {
                                     .cornerRadius(20)
                                     .padding(.horizontal)
 
+                                    // Folders Section
                                     VStack(alignment: .leading, spacing: 10) {
                                         Text("Folders")
                                             .font(.title2)
                                             .foregroundColor(.white)
                                             .padding(.bottom, 5)
 
-                                        let folderNames = filteredFolders.map { $0.lastPathComponent }
+                                        let filteredFolders = firebaseFolders.filter {
+                                            searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText)
+                                        }
 
-                                        if folderNames.isEmpty {
+                                        if filteredFolders.isEmpty {
                                             Text("No folders yet.")
                                                 .foregroundColor(.white.opacity(0.7))
                                                 .padding()
@@ -146,16 +153,24 @@ struct Homepage: View {
                                         } else {
                                             ScrollView(.horizontal, showsIndicators: false) {
                                                 LazyHGrid(rows: [GridItem(.fixed(80)), GridItem(.fixed(80))], spacing: 16) {
-                                                    ForEach(folderNames, id: \.self) { folder in
-                                                        Text(folder)
-                                                            .font(.body)
-                                                            .foregroundColor(.white)
-                                                            .lineLimit(1)
-                                                            .truncationMode(.tail)
-                                                            .frame(width: 150, alignment: .leading)
-                                                            .padding()
-                                                            .background(Color.pink.opacity(0.6))
-                                                            .cornerRadius(12)
+                                                    ForEach(filteredFolders, id: \.id) { folder in
+                                                        let totalTerms = folder.setIDs.reduce(0) { count, setID in
+                                                            count + (setViewModel.sets.first { $0.id == setID }?.terms.count ?? 0)
+                                                        }
+
+                                                        VStack(alignment: .leading, spacing: 4) {
+                                                            Text(folder.name)
+                                                                .font(.body)
+                                                                .foregroundColor(.white)
+                                                                .lineLimit(1)
+                                                            Text("\(totalTerms) terms")
+                                                                .font(.subheadline)
+                                                                .foregroundColor(.white.opacity(0.8))
+                                                        }
+                                                        .padding()
+                                                        .frame(width: 150, alignment: .leading)
+                                                        .background(Color.pink.opacity(0.6))
+                                                        .cornerRadius(12)
                                                     }
                                                 }
                                                 .padding(.horizontal, 10)
@@ -184,7 +199,9 @@ struct Homepage: View {
                         Spacer()
                         tabBarItem(icon: "house.fill", tag: "home")
                         Spacer()
-                        Button(action: { showingCreateSet = true }) {
+                        Button(action: {
+                            showingAddOptions = true
+                        }) {
                             ZStack {
                                 Circle()
                                     .fill(Color.pink)
@@ -213,12 +230,34 @@ struct Homepage: View {
         .fullScreenCover(isPresented: $showingCreateSet) {
             CreateSetView(viewModel: setViewModel)
         }
+        .fullScreenCover(isPresented: $showCreateFolderView) {
+            CreateFolderView(setViewModel: setViewModel)
+        }
+        .sheet(isPresented: $showingAddOptions) {
+            CreateOptionsSheet(
+                onCreateSet: {
+                    showingAddOptions = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showingCreateSet = true
+                    }
+                },
+                onCreateFolder: {
+                    showingAddOptions = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showCreateFolderView = true
+                    }
+                }
+            )
+            .background(.clear)
+            .presentationDetents([.height(250)])
+        }
         .onAppear {
             createLibraryDirectoryIfNeeded()
             fetchUserData()
             loadFoldersAndSets()
             if let uid = Auth.auth().currentUser?.uid {
                 setViewModel.fetchSets(for: uid)
+                fetchStudyFolders(for: uid)
             }
         }
         .onChange(of: scenePhase) { newPhase in
@@ -226,10 +265,25 @@ struct Homepage: View {
                 fetchUserData()
                 if let uid = Auth.auth().currentUser?.uid {
                     setViewModel.fetchSets(for: uid)
+                    fetchStudyFolders(for: uid)
                 }
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
+    }
+
+    func fetchStudyFolders(for uid: String) {
+        Firestore.firestore()
+            .collection("users")
+            .document(uid)
+            .collection("folders")
+            .getDocuments { snapshot, error in
+                guard let documents = snapshot?.documents, error == nil else { return }
+                let fetched = documents.compactMap { doc -> StudyFolder? in
+                    StudyFolder(id: doc.documentID, data: doc.data())
+                }
+                self.firebaseFolders = fetched
+            }
     }
 
     func tabBarItem(icon: String, tag: String) -> some View {
