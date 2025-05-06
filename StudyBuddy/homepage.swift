@@ -115,7 +115,7 @@ struct Homepage: View {
                                                             }
                                                             .padding()
                                                             .frame(width: 150)
-                                                            .background(Color.pink.opacity(0.8))
+                                                            .background(Color.pink.opacity(0.7))
                                                             .cornerRadius(16)
                                                         }
                                                     }
@@ -230,7 +230,11 @@ struct Homepage: View {
         .fullScreenCover(isPresented: $showingCreateSet) {
             CreateSetView(viewModel: setViewModel)
         }
-        .fullScreenCover(isPresented: $showCreateFolderView) {
+        .fullScreenCover(isPresented: $showCreateFolderView, onDismiss: {
+            if let uid = Auth.auth().currentUser?.uid {
+                fetchStudyFolders(for: uid)
+            }
+        }) {
             CreateFolderView(setViewModel: setViewModel)
         }
         .sheet(isPresented: $showingAddOptions) {
