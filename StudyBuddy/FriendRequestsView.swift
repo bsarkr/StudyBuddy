@@ -87,7 +87,6 @@ struct FriendRequestsView: View {
         }
     }
 
-    //Load Requests
     func loadRequests() {
         guard let currentUID = Auth.auth().currentUser?.uid else { return }
 
@@ -116,20 +115,14 @@ struct FriendRequestsView: View {
         var fetchedUsers: [UserProfile] = []
         let group = DispatchGroup()
 
-        for rawUID in uids {
-            let uid = rawUID.trimmingCharacters(in: .whitespacesAndNewlines)
-            if uid.isEmpty {
-                print("Skipping empty UID from friendRequests")
-                continue
-            }
-
+        for uid in uids {
             group.enter()
             db.collection("users").document(uid).getDocument { snapshot, _ in
                 if let snapshot = snapshot, snapshot.exists, let data = snapshot.data() {
                     let user = UserProfile(
                         uid: uid,
                         username: data["username"] as? String ?? "",
-                        profilePictureURL: URL(string: data["profileImageURL"] as? String ?? ""),
+                        profilePictureURL: URL(string: data["photoURL"] as? String ?? ""),
                         hasBeenRequested: false
                     )
                     fetchedUsers.append(user)
@@ -144,44 +137,48 @@ struct FriendRequestsView: View {
         }
     }
 
-    //Accept / Decline Logic
     func acceptRequest(from user: UserProfile) {
         guard let currentUID = Auth.auth().currentUser?.uid else { return }
 
         let db = Firestore.firestore()
         let userRef = db.collection("users").document(currentUID)
-        let friendRef = db.collection("users").document(user.uid)
 
-        userRef.setData(["friends": FieldValue.arrayUnion([user.uid])], merge: true) { error1 in
-            if let error1 = error1 {
-                print("Error updating current user:", error1.localizedDescription)
+        userRef.setData(["friends": FieldValue.arrayUnion([user.uid])], merge: true) { error in
+            if let error = error {
+                print("Error updating current user:", error.localizedDescription)
                 return
             }
 
-            friendRef.setData(["friends": FieldValue.arrayUnion([currentUID])], merge: true) { error2 in
-                if let error2 = error2 {
-                    print("Error updating friend user:", error2.localizedDescription)
-                    return
+            db.collection("acceptedFriendRequests").addDocument(data: [
+                "from": currentUID,
+                "to": user.uid,
+                "timestamp": Timestamp()
+            ]) { err in
+                if let err = err {
+                    print("Error adding accepted notice:", err.localizedDescription)
                 }
-
-                db.collection("friendRequests")
-                    .whereField("from", isEqualTo: user.uid)
-                    .whereField("to", isEqualTo: currentUID)
-                    .getDocuments { snapshot, error in
-                        guard let docs = snapshot?.documents else {
-                            print("No request to delete.")
-                            return
-                        }
-
-                        for doc in docs {
-                            doc.reference.delete()
-                        }
-
-                        DispatchQueue.main.async {
-                            requests.removeAll { $0.uid == user.uid }
-                        }
-                    }
             }
+
+            db.collection("friendRequests")
+                .whereField("from", isEqualTo: user.uid)
+                .whereField("to", isEqualTo: currentUID)
+                .getDocuments { snapshot, error in
+                    guard let docs = snapshot?.documents else {
+                        print("No request to delete.")
+                        return
+                    }
+
+                    for doc in docs {
+                        doc.reference.delete()
+                    }
+
+                    DispatchQueue.main.async {
+                        requests.removeAll { $0.uid == user.uid }
+
+                        //Trigger friend list reload
+                        NotificationCenter.default.post(name: .refreshFriendsList, object: nil)
+                    }
+                }
         }
     }
 
