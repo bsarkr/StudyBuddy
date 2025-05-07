@@ -28,7 +28,7 @@ struct GameSelectionView: View {
             .gameButtonStyle()
 
             NavigationLink("Match Me") {
-                Text("Match Me Game View for \(set.title)") // Replace with actual view
+                MatchMeView(set: set)
             }
             .gameButtonStyle()
 
