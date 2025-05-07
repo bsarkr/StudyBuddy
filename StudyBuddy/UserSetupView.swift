@@ -122,7 +122,8 @@ struct UserSetupView: View {
                     "firstName": firstName,
                     "lastName": lastName,
                     "preferredName": preferredName,
-                    "email": email
+                    "email": email,
+                    "friends": []
                 ]
 
                 Firestore.firestore().collection("users").document(user.uid).setData(userData) { error in

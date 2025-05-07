@@ -158,19 +158,21 @@ struct Homepage: View {
                                                             count + (setViewModel.sets.first { $0.id == setID }?.terms.count ?? 0)
                                                         }
 
-                                                        VStack(alignment: .leading, spacing: 4) {
-                                                            Text(folder.name)
-                                                                .font(.body)
-                                                                .foregroundColor(.white)
-                                                                .lineLimit(1)
-                                                            Text("\(totalTerms) terms")
-                                                                .font(.subheadline)
-                                                                .foregroundColor(.white.opacity(0.8))
+                                                        NavigationLink(destination: FolderDetailView(folder: folder).environmentObject(setViewModel)) {
+                                                            VStack(alignment: .leading, spacing: 4) {
+                                                                Text(folder.name)
+                                                                    .font(.body)
+                                                                    .foregroundColor(.white)
+                                                                    .lineLimit(1)
+                                                                Text("\(totalTerms) terms")
+                                                                    .font(.subheadline)
+                                                                    .foregroundColor(.white.opacity(0.8))
+                                                            }
+                                                            .padding()
+                                                            .frame(width: 150, alignment: .leading)
+                                                            .background(Color.purple.opacity(0.7))
+                                                            .cornerRadius(12)
                                                         }
-                                                        .padding()
-                                                        .frame(width: 150, alignment: .leading)
-                                                        .background(Color.purple.opacity(0.7))
-                                                        .cornerRadius(12)
                                                     }
                                                 }
                                                 .padding(.horizontal, 10)
@@ -182,7 +184,7 @@ struct Homepage: View {
                                     .padding(20)
                                     .frame(maxWidth: .infinity, alignment: .topLeading)
                                     .frame(minHeight: 225)
-                                    .background(Color(red: 1.0, green: 0.7, blue: 0.7))
+                                    .background(Color(red: 0.85, green: 0.75, blue: 1.0))
                                     .cornerRadius(20)
                                     .padding(.horizontal)
                                 }
