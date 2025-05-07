@@ -69,6 +69,8 @@ class ChatGPTService {
         }
 
         Do NOT include explanations, markdown, or backticks.
+        
+        If the exact terms and definitions were not provided by the user, ALWAYS have a MINIMUM of 15 terms and definitions.
         """
 
         let requestBody: [String: Any] = [
