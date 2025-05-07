@@ -49,7 +49,7 @@ struct FolderDetailsOptionsSheet: View {
             Spacer()
         }
         .padding()
-        .background(Color(red: 1.0, green: 0.85, blue: 0.9))
+        .background(Color(red: 0.9, green: 0.85, blue: 1.0))
         .cornerRadius(30)
         .ignoresSafeArea(edges: .bottom)
     }

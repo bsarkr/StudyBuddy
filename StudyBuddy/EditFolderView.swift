@@ -23,7 +23,7 @@ struct EditFolderView: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            Color.pink.opacity(0.1).ignoresSafeArea()
+            Color(red: 0.9, green: 0.85, blue: 1.0).ignoresSafeArea()
 
             VStack(spacing: 20) {
                 Spacer().frame(height: 60)

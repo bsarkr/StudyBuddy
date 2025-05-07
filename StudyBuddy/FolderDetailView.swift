@@ -11,6 +11,8 @@ import FirebaseAuth
 
 struct FolderDetailView: View {
     let folder: StudyFolder
+    var onDelete: (() -> Void)? = nil
+
     @EnvironmentObject var setViewModel: SetViewModel
     @Environment(\.dismiss) var dismiss
 
@@ -24,7 +26,7 @@ struct FolderDetailView: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .topLeading) {
-                Color.pink.opacity(0.1).ignoresSafeArea()
+                Color(red: 0.9, green: 0.85, blue: 1.0).ignoresSafeArea()
 
                 VStack(spacing: 20) {
                     Spacer().frame(height: 60)
@@ -117,6 +119,7 @@ struct FolderDetailView: View {
                     showOptionsSheet = false
                 },
                 onDelete: {
+                    onDelete?() 
                     deleteFolder()
                     dismiss()
                 }
@@ -137,6 +140,10 @@ struct FolderDetailView: View {
             .document(userId)
             .collection("folders")
             .document(folder.id)
-            .delete()
+            .delete { error in
+                if let error = error {
+                    print("Error deleting folder: \(error.localizedDescription)")
+                }
+            }
     }
 }

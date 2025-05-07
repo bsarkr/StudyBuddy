@@ -184,7 +184,7 @@ struct Homepage: View {
                                     .padding(20)
                                     .frame(maxWidth: .infinity, alignment: .topLeading)
                                     .frame(minHeight: 225)
-                                    .background(Color(red: 1.0, green: 0.7, blue: 0.7))
+                                    .background(Color(red: 0.85, green: 0.75, blue: 1.0))
                                     .cornerRadius(20)
                                     .padding(.horizontal)
                                 }
