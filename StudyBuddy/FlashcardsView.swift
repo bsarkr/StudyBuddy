@@ -72,6 +72,15 @@ struct FlashcardsView: View {
         .onAppear {
             startGame()
         }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if !showResults {
+                    Button("Reset") {
+                        startGame()
+                    }
+                }
+            }
+        }
     }
 
     private func startGame() {
@@ -103,6 +112,11 @@ struct FlashcardsView: View {
             Text("Score: \(Int(percentage))%")
                 .font(.headline)
                 .foregroundColor(.pink)
+
+            Button("Play Again") {
+                startGame()
+            }
+            .gameButtonStyle()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
@@ -177,3 +191,4 @@ private extension View {
             .shadow(radius: 2)
     }
 }
+
