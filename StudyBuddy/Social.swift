@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SocialView: View {
-    @State private var selectedTab: String = "Friends"
+    @State private var selectedTab: String = "Messages"
     private let tabs = ["Friends", "Messages", "Sessions"]
 
     var body: some View {

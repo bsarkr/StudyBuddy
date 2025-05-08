@@ -24,6 +24,9 @@ struct FriendsTabView: View {
     @State private var hasPendingFriendRequests = false
     @State private var hasAcceptedRequests = false
     @State private var selectedFriend: UserProfile? = nil
+    
+    @State private var chatRecipient: UserProfile? = nil
+    @State private var navigateToChatView = false
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -207,7 +210,8 @@ struct FriendsTabView: View {
 
                                         HStack(spacing: 16) {
                                             Button(action: {
-                                                // future messaging feature
+                                                chatRecipient = friend
+                                                navigateToChatView = true
                                             }) {
                                                 Image(systemName: "message")
                                                     .font(.title3)
@@ -238,6 +242,14 @@ struct FriendsTabView: View {
                     Spacer(minLength: 10)
                 }
                 .padding(.top)
+                
+                NavigationLink(
+                    destination: chatRecipient.map { ChatView(otherUser: $0) },
+                    isActive: $navigateToChatView
+                ) {
+                    EmptyView()
+                }
+                .hidden()
             }
         }
         .sheet(item: $selectedFriend) { user in
