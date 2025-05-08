@@ -14,7 +14,9 @@ class AuthViewModel: ObservableObject {
     @Published var isLoggedIn = false
     @Published var hasCompletedSetup = false
     @Published var isEmailVerified = false
-    @Published var isCreatingAccount = false 
+    @Published var isCreatingAccount = false
+    
+    @Published var currentUser: UserProfile?
 
     private var handle: AuthStateDidChangeListenerHandle?
 

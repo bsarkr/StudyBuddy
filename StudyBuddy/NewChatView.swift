@@ -28,31 +28,43 @@ struct NewChatView: View {
                         .foregroundColor(.gray)
                         .padding()
                 } else {
-                    List(friends) { friend in
-                        Button {
-                            selectedFriend = friend
-                            dismissSheet()
-                        } label: {
-                            HStack(spacing: 12) {
-                                AsyncImage(url: friend.profilePictureURL) { phase in
-                                    if let image = phase.image {
-                                        image.resizable().scaledToFill()
-                                    } else {
-                                        Color.gray
-                                    }
-                                }
-                                .frame(width: 50, height: 50)
-                                .clipShape(Circle())
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            ForEach(friends) { friend in
+                                Button {
+                                    selectedFriend = friend
+                                    dismissSheet()
+                                } label: {
+                                    HStack(spacing: 16) {
+                                        AsyncImage(url: friend.profilePictureURL) { phase in
+                                            if let image = phase.image {
+                                                image.resizable().scaledToFill()
+                                            } else {
+                                                Image(systemName: "person.circle.fill")
+                                                    .resizable()
+                                                    .foregroundColor(.gray)
+                                            }
+                                        }
+                                        .frame(width: 50, height: 50)
+                                        .clipShape(Circle())
+                                        .overlay(Circle().stroke(Color.pink, lineWidth: 2))
 
-                                Text(friend.username)
-                                    .font(.headline)
-                                    .foregroundColor(.black)
+                                        Text(friend.username)
+                                            .font(.headline)
+                                            .foregroundColor(.pink)
+
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .background(Color.white)
+                                    .cornerRadius(12)
+                                    .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+                                }
+                                .padding(.horizontal)
                             }
-                            .padding(.vertical, 4)
                         }
+                        .padding(.top)
                     }
-                    .scrollContentBackground(.hidden)
-                    .background(Color.pink.opacity(0.05))
                 }
             }
             .navigationTitle("New Chat")

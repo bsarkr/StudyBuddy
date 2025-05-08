@@ -8,6 +8,19 @@
 import SwiftUI
 import FirebaseFirestore
 import FirebaseAuth
+import Combine
+
+enum ChatRenderItem: Identifiable {
+    case message(index: Int, message: Message)
+    case timestamp(Timestamp)
+
+    var id: String {
+        switch self {
+        case .message(_, let msg): return "msg_\(msg.id)"
+        case .timestamp(let ts): return "ts_\(ts.seconds)"
+        }
+    }
+}
 
 struct ChatView: View {
     let otherUser: UserProfile
@@ -18,6 +31,9 @@ struct ChatView: View {
 
     @State private var fullName: String = ""
     @State private var profileURL: URL? = nil
+    @State private var isKeyboardVisible: Bool = false
+
+    @EnvironmentObject var authViewModel: AuthViewModel
 
     var currentUID: String {
         Auth.auth().currentUser?.uid ?? ""
@@ -27,16 +43,21 @@ struct ChatView: View {
         [currentUID, otherUser.uid].sorted().joined(separator: "_")
     }
 
+    func formattedDate(_ timestamp: Timestamp) -> String {
+        let date = timestamp.dateValue()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d 'at' h:mm a"
+        return formatter.string(from: date)
+    }
+
     var body: some View {
         ZStack {
             Color.pink.opacity(0.05).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header Row with Back, Image, Name
+                // Header
                 HStack(spacing: 12) {
-                    Button(action: {
-                        dismiss()
-                    }) {
+                    Button(action: { dismiss() }) {
                         Image(systemName: "chevron.left")
                             .font(.title2)
                             .foregroundColor(.pink)
@@ -53,8 +74,7 @@ struct ChatView: View {
                                 image.resizable().scaledToFill()
                             default:
                                 Image(systemName: "person.crop.circle.fill")
-                                    .resizable()
-                                    .foregroundColor(.pink)
+                                    .resizable().foregroundColor(.pink)
                             }
                         }
                         .frame(width: 45, height: 45)
@@ -63,15 +83,11 @@ struct ChatView: View {
                     }
 
                     Text(fullName.isEmpty ? otherUser.username : fullName)
-                        .font(.title2)
-                        .bold()
-                        .foregroundColor(.pink)
+                        .font(.title2).bold().foregroundColor(.pink)
 
                     Spacer()
                 }
-                .padding(.horizontal)
-                .padding(.top, 16)
-                .padding(.bottom, 8)
+                .padding(.horizontal).padding(.top, 16).padding(.bottom, 8)
 
                 Divider()
 
@@ -79,32 +95,72 @@ struct ChatView: View {
                 ScrollViewReader { scrollProxy in
                     ScrollView {
                         LazyVStack {
-                            ForEach(messages) { message in
-                                HStack {
-                                    if message.senderId == currentUID {
-                                        Spacer()
-                                        Text(message.text)
-                                            .padding()
-                                            .background(Color.pink)
-                                            .foregroundColor(.white)
-                                            .cornerRadius(16)
-                                    } else {
-                                        Text(message.text)
-                                            .padding()
-                                            .background(Color.white)
-                                            .cornerRadius(16)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 16)
-                                                    .stroke(Color.pink.opacity(0.2), lineWidth: 1)
-                                            )
-                                        Spacer()
+                            if messages.isEmpty {
+                                Text("No messages yet.")
+                                    .foregroundColor(.gray)
+                                    .padding(.top, 40)
+                            } else {
+                                let renderItems = generateRenderItems()
+
+                                ForEach(renderItems) { item in
+                                    switch item {
+                                    case .timestamp(let ts):
+                                        Text(formattedDate(ts))
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                            .padding(.vertical, 4)
+
+                                    case .message(let index, let message):
+                                        let isCurrentUser = message.senderId == currentUID
+                                        let isLastInGroup = !isCurrentUser &&
+                                            (index == messages.count - 1 || messages[index + 1].senderId == currentUID)
+
+                                        HStack(alignment: .bottom, spacing: 8) {
+                                            if !isCurrentUser {
+                                                if isLastInGroup {
+                                                    AsyncImage(url: profileURL) { phase in
+                                                        switch phase {
+                                                        case .success(let image):
+                                                            image.resizable().scaledToFill()
+                                                        default:
+                                                            Image(systemName: "person.crop.circle.fill")
+                                                                .resizable().foregroundColor(.pink)
+                                                        }
+                                                    }
+                                                    .frame(width: 30, height: 30)
+                                                    .clipShape(Circle())
+                                                    .overlay(Circle().stroke(Color.pink, lineWidth: 1))
+                                                } else {
+                                                    Color.clear.frame(width: 30, height: 30)
+                                                }
+                                            }
+
+                                            if isCurrentUser {
+                                                Spacer()
+                                                Text(message.text)
+                                                    .padding()
+                                                    .background(Color.pink)
+                                                    .foregroundColor(.white)
+                                                    .cornerRadius(16)
+                                            } else {
+                                                Text(message.text)
+                                                    .padding()
+                                                    .background(Color.white)
+                                                    .cornerRadius(16)
+                                                    .overlay(
+                                                        RoundedRectangle(cornerRadius: 16)
+                                                            .stroke(Color.pink.opacity(0.2), lineWidth: 1)
+                                                    )
+                                                Spacer()
+                                            }
+                                        }
+                                        .padding(.horizontal)
+                                        .id(message.id)
                                     }
                                 }
-                                .padding(.horizontal)
-                                .id(message.id)
                             }
                         }
-                        .padding(.top)
+                        .padding(.top).padding(.bottom, 24)
                     }
                     .onChange(of: messages.count) { _ in
                         if let last = messages.last {
@@ -113,15 +169,32 @@ struct ChatView: View {
                             }
                         }
                     }
+                    .onChange(of: isKeyboardVisible) { visible in
+                        if visible, let last = messages.last {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                withAnimation {
+                                    scrollProxy.scrollTo(last.id, anchor: .bottom)
+                                }
+                            }
+                        }
+                    }
+                    .onReceive(Just(messages)) { _ in
+                        if let last = messages.last {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                withAnimation {
+                                    scrollProxy.scrollTo(last.id, anchor: .bottom)
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Divider()
 
-                // Message input
+                // Input
                 HStack {
                     TextField("Message...", text: $newMessage)
-                        .padding(12)
-                        .background(Color.white)
+                        .padding(12).background(Color.white)
                         .cornerRadius(16)
 
                     Button(action: sendMessage) {
@@ -140,13 +213,38 @@ struct ChatView: View {
         .onAppear {
             loadMessages()
             loadFriendNameAndPhoto()
+            markMessagesAsSeen()
+
+            NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { _ in
+                isKeyboardVisible = true
+            }
+            NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
+                isKeyboardVisible = false
+            }
         }
         .onDisappear {
             chatListener?.remove()
+            NotificationCenter.default.removeObserver(self)
         }
         .onTapGesture {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
+    }
+
+    func generateRenderItems() -> [ChatRenderItem] {
+        var items: [ChatRenderItem] = []
+        var lastTimestamp: Timestamp? = nil
+
+        for (index, message) in messages.enumerated() {
+            let currentTimestamp = message.timestamp
+            if lastTimestamp == nil || currentTimestamp.dateValue().timeIntervalSince(lastTimestamp!.dateValue()) > 300 {
+                items.append(.timestamp(currentTimestamp))
+            }
+            items.append(.message(index: index, message: message))
+            lastTimestamp = currentTimestamp
+        }
+
+        return items
     }
 
     func loadFriendNameAndPhoto() {
@@ -156,7 +254,6 @@ struct ChatView: View {
                 let lastName = data["lastName"] as? String ?? ""
                 let preferredName = data["preferredName"] as? String ?? ""
                 let photo = data["photoURL"] as? String ?? ""
-
                 fullName = preferredName.isEmpty ? "\(firstName) \(lastName)" : preferredName
                 if let url = URL(string: photo) {
                     profileURL = url
@@ -166,14 +263,21 @@ struct ChatView: View {
     }
 
     func loadMessages() {
+        chatListener?.remove()
+        self.messages = []
+
         let db = Firestore.firestore()
         chatListener = db.collection("chats")
             .document(chatId)
             .collection("messages")
             .order(by: "timestamp", descending: false)
             .addSnapshotListener { snapshot, error in
-                guard let docs = snapshot?.documents else { return }
-                messages = docs.compactMap { doc in
+                if let error = error {
+                    print("Error loading messages: \(error.localizedDescription)")
+                    return
+                }
+
+                self.messages = snapshot?.documents.compactMap { doc in
                     let data = doc.data()
                     return Message(
                         id: doc.documentID,
@@ -182,7 +286,7 @@ struct ChatView: View {
                         text: data["text"] as? String ?? "",
                         timestamp: data["timestamp"] as? Timestamp ?? Timestamp()
                     )
-                }
+                } ?? []
             }
     }
 
@@ -195,26 +299,46 @@ struct ChatView: View {
         let db = Firestore.firestore()
         let chatRef = db.collection("chats").document(chatId)
         let messageRef = chatRef.collection("messages").document()
+        let timestamp = Timestamp()
+
+        let senderUsername: String
+        if let user = authViewModel.currentUser {
+            senderUsername = user.username
+        } else {
+            senderUsername = "You"
+        }
+        let lastMsgPreview = "\(senderUsername): \(textToSend)"
+
+        chatRef.setData([
+            "participants": [currentUID, otherUser.uid],
+            "lastMessage": textToSend,
+            "lastUpdated": timestamp,
+            "lastSender": currentUID
+        ], merge: true)
 
         let messageData: [String: Any] = [
             "senderId": currentUID,
             "receiverId": otherUser.uid,
             "text": textToSend,
-            "timestamp": Timestamp()
+            "timestamp": timestamp,
+            "seen": false
         ]
 
-        // Save the message
-        messageRef.setData(messageData) { error in
-            if let error = error {
-                print("Error sending message: \(error.localizedDescription)")
-                newMessage = textToSend // restore input on failure
-            } else {
-                chatRef.setData([
-                    "lastMessage": textToSend,
-                    "lastUpdated": Timestamp(),
-                    "participants": [currentUID, otherUser.uid]
-                ], merge: true)
-            }
-        }
+        messageRef.setData(messageData)
     }
-}
+    
+    func markMessagesAsSeen() {
+        let db = Firestore.firestore()
+        let messagesRef = db.collection("chats").document(chatId).collection("messages")
+
+        messagesRef
+            .whereField("receiverId", isEqualTo: currentUID)
+            .whereField("seen", isEqualTo: false)
+            .getDocuments { snapshot, _ in
+                let batch = db.batch()
+                snapshot?.documents.forEach { doc in
+                    batch.updateData(["seen": true], forDocument: doc.reference)
+                }
+                batch.commit()
+            }
+    }}

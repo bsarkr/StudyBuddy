@@ -438,11 +438,3 @@ struct FriendsTabView_Previews: PreviewProvider {
         FriendsTabView().environmentObject(AuthViewModel())
     }
 }
-
-struct UserProfile: Identifiable, Equatable {
-    var id: String { uid }
-    let uid: String
-    let username: String
-    let profilePictureURL: URL?
-    var hasBeenRequested: Bool
-}
