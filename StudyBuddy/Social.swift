@@ -42,16 +42,7 @@ struct SocialView: View {
                     if selectedTab == "Friends" {
                         FriendsTabView()
                     } else if selectedTab == "Messages" {
-                        ScrollView {
-                            VStack(spacing: 20) {
-                                Text("Messages View")
-                                    .font(.title2)
-                                    .foregroundColor(.gray)
-                                    .padding(.top, 40)
-                                Spacer()
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
+                        MessagingView()
                     } else if selectedTab == "Sessions" {
                         ScrollView {
                             VStack(spacing: 20) {

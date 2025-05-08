@@ -82,7 +82,7 @@ struct Homepage: View {
                                 VStack(alignment: .leading, spacing: 20) {
                                     // Sets Section
                                     VStack(alignment: .leading, spacing: 10) {
-                                        Text("All Sets")
+                                        Text("Recent Sets")
                                             .font(.title2)
                                             .foregroundColor(.white)
                                             .padding(.bottom, 5)
