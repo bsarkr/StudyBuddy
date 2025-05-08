@@ -1,4 +1,3 @@
-//
 //  FriendsTabView.swift
 //  StudyBuddy
 //
@@ -24,6 +23,7 @@ struct FriendsTabView: View {
     @State private var friends: [UserProfile] = []
     @State private var hasPendingFriendRequests = false
     @State private var hasAcceptedRequests = false
+    @State private var selectedFriend: UserProfile? = nil
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -175,28 +175,35 @@ struct FriendsTabView: View {
                             LazyVStack(spacing: 16) {
                                 ForEach(friends) { friend in
                                     HStack(spacing: 12) {
-                                        AsyncImage(url: friend.profilePictureURL) { phase in
-                                            switch phase {
-                                            case .empty:
-                                                ProgressView().frame(width: 50, height: 50)
-                                            case .success(let image):
-                                                image.resizable().scaledToFill()
-                                            case .failure:
-                                                Image(systemName: "person.fill")
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .foregroundColor(.gray)
-                                            @unknown default:
-                                                EmptyView()
+                                        Button(action: {
+                                            selectedFriend = friend
+                                        }) {
+                                            HStack(spacing: 12) {
+                                                AsyncImage(url: friend.profilePictureURL) { phase in
+                                                    switch phase {
+                                                    case .empty:
+                                                        ProgressView().frame(width: 50, height: 50)
+                                                    case .success(let image):
+                                                        image.resizable().scaledToFill()
+                                                    case .failure:
+                                                        Image(systemName: "person.fill")
+                                                            .resizable()
+                                                            .scaledToFit()
+                                                            .foregroundColor(.gray)
+                                                    @unknown default:
+                                                        EmptyView()
+                                                    }
+                                                }
+                                                .frame(width: 50, height: 50)
+                                                .clipShape(Circle())
+
+                                                Text(friend.username)
+                                                    .font(.headline)
+
+                                                Spacer()
                                             }
                                         }
-                                        .frame(width: 50, height: 50)
-                                        .clipShape(Circle())
-
-                                        Text(friend.username)
-                                            .font(.headline)
-
-                                        Spacer()
+                                        .buttonStyle(PlainButtonStyle())
 
                                         HStack(spacing: 16) {
                                             Button(action: {
@@ -232,6 +239,11 @@ struct FriendsTabView: View {
                 }
                 .padding(.top)
             }
+        }
+        .sheet(item: $selectedFriend) { user in
+            UserProfileSheetView(userID: user.uid)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
         }
         .onAppear {
             loadFriends()
@@ -427,7 +439,7 @@ struct FriendsTabView_Previews: PreviewProvider {
     }
 }
 
-struct UserProfile: Identifiable {
+struct UserProfile: Identifiable, Equatable {
     var id: String { uid }
     let uid: String
     let username: String
