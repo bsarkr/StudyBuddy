@@ -23,7 +23,7 @@ struct GameSelectionView: View {
             .gameButtonStyle()
 
             NavigationLink("Flashcards") {
-                Text("Flashcards View for \(set.title)") // Replace with actual view
+                FlashcardsView(set: set)
             }
             .gameButtonStyle()
 
