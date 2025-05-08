@@ -32,6 +32,7 @@ struct ChatView: View {
     @State private var fullName: String = ""
     @State private var profileURL: URL? = nil
     @State private var isKeyboardVisible: Bool = false
+    @State private var inputHeight: CGFloat = 40
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
@@ -192,10 +193,24 @@ struct ChatView: View {
                 Divider()
 
                 // Input
-                HStack {
-                    TextField("Message...", text: $newMessage)
-                        .padding(12).background(Color.white)
-                        .cornerRadius(16)
+                HStack(alignment: .bottom, spacing: 8) {
+                    ZStack(alignment: .topLeading) {
+                        if newMessage.isEmpty {
+                            Text("Message...")
+                                .foregroundColor(.gray)
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 12)
+                        }
+
+                        GrowingTextEditor(text: $newMessage, height: $inputHeight)
+                            .frame(height: inputHeight)
+                            .background(Color.white)
+                            .cornerRadius(16)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                            )
+                    }
 
                     Button(action: sendMessage) {
                         Image(systemName: "paperplane.fill")
@@ -326,7 +341,7 @@ struct ChatView: View {
 
         messageRef.setData(messageData)
     }
-    
+
     func markMessagesAsSeen() {
         let db = Firestore.firestore()
         let messagesRef = db.collection("chats").document(chatId).collection("messages")
@@ -341,4 +356,5 @@ struct ChatView: View {
                 }
                 batch.commit()
             }
-    }}
+    }
+}
