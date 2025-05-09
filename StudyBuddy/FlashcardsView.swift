@@ -3,12 +3,15 @@
 //  StudyBuddy
 //
 //  Created by Max Hazelton on 5/8/25.
+//  Updated styling by Bilash Sarkar on 5/9/25
 //
 
 import SwiftUI
 
 struct FlashcardsView: View {
     let set: StudySet
+
+    @Environment(\.dismiss) var dismiss
 
     @State private var remainingCards: [FlashcardTerm] = []
     @State private var currentCard: FlashcardTerm?
@@ -21,66 +24,102 @@ struct FlashcardsView: View {
         ZStack {
             Color.pink.opacity(0.1).ignoresSafeArea()
 
-            VStack(spacing: 20) {
-                HStack {
-                    Text("✅ \(knownCards.count)")
-                        .font(.subheadline)
-                        .foregroundColor(.green)
-                    Spacer()
-                    Text("❌ \(unknownCards.count)")
-                        .font(.subheadline)
-                        .foregroundColor(.red)
+            VStack(spacing: 0) {
+                ZStack {
+                    Color.pink.opacity(0.1)
+                        .frame(height: 60)
+                        .ignoresSafeArea(edges: .top)
+
+                    HStack {
+                        Button(action: {
+                            withAnimation { dismiss() }
+                        }) {
+                            Image(systemName: "chevron.left")
+                                .font(.title2)
+                                .foregroundColor(.pink)
+                                .padding(10)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                        }
+                        .padding(.leading, 16)
+
+                        Spacer()
+
+                        if !showResults {
+                            Button("Reset") {
+                                startGame()
+                            }
+                            .fontWeight(.semibold)
+                            .foregroundColor(.pink)
+                            .padding(.trailing, 16)
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 10)
+                    .padding(.bottom, 8)
+
+                    Text("Flashcards")
+                        .font(.headline)
+                        .foregroundColor(.black)
                 }
-                .padding(.horizontal)
+
+                Spacer()
 
                 if showResults {
                     resultsView
                 } else {
-                    if let card = currentCard {
-                        FlipCardView(isFlipped: $isFlipped, front: card.term, back: card.definition)
-                            .frame(height: 250)
-                            .onTapGesture {
-                                withAnimation {
-                                    isFlipped.toggle()
-                                }
-                            }
+                    VStack(spacing: 20) {
+                        // ✅ Score Row
+                        HStack {
+                            Text("✅ \(knownCards.count)")
+                                .font(.subheadline)
+                                .foregroundColor(.green)
+                            Spacer()
+                            Text("❌ \(unknownCards.count)")
+                                .font(.subheadline)
+                                .foregroundColor(.red)
+                        }
+                        .frame(width: 300)
 
-                        if isFlipped {
-                            HStack(spacing: 24) {
-                                Button("Know it") {
-                                    knownCards.append(card)
-                                    advanceCard()
-                                }
-                                .gameButtonStyle()
+                        if let card = currentCard {
+                            VStack(spacing: 20) {
+                                FlipCardView(isFlipped: $isFlipped, front: card.term, back: card.definition)
+                                    .frame(width: 320, height: 220)
+                                    .onTapGesture {
+                                        withAnimation {
+                                            isFlipped.toggle()
+                                        }
+                                    }
 
-                                Button("Don't know it") {
-                                    unknownCards.append(card)
-                                    advanceCard()
+                                if isFlipped {
+                                    HStack(spacing: 24) {
+                                        Button("Know it") {
+                                            knownCards.append(card)
+                                            advanceCard()
+                                        }
+                                        .gameButtonStyle()
+
+                                        Button("Don't know it") {
+                                            unknownCards.append(card)
+                                            advanceCard()
+                                        }
+                                        .gameButtonStyle()
+                                    }
                                 }
-                                .gameButtonStyle()
                             }
                         }
+                    }
+                    .padding(.bottom, 50)
+                }
 
-                        Spacer()
-                    }
-                }
+                Spacer()
             }
-            .padding()
+            .onAppear { startGame() }
         }
-        .navigationTitle("Flashcards")
+        .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            startGame()
-        }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                if !showResults {
-                    Button("Reset") {
-                        startGame()
-                    }
-                }
-            }
-        }
+        .navigationBarHidden(true)
     }
 
     private func startGame() {
@@ -144,6 +183,7 @@ struct FlashcardsView: View {
 
             Spacer()
         }
+        .padding()
     }
 }
 
@@ -185,10 +225,10 @@ private extension View {
         self
             .font(.headline)
             .padding()
+            .frame(minWidth: 140)
             .background(Color.pink)
             .foregroundColor(.white)
-            .cornerRadius(10)
-            .shadow(radius: 2)
+            .cornerRadius(14)
+            .shadow(color: Color.pink.opacity(0.3), radius: 4, x: 0, y: 3)
     }
 }
-

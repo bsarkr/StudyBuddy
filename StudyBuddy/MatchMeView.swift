@@ -24,14 +24,15 @@ struct MatchMeView: View {
     @State private var timer: Timer?
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topLeading) {
             Color.pink.opacity(0.1).ignoresSafeArea()
 
             VStack(spacing: 16) {
+                Spacer().frame(height: 60)
+
                 Text("Match Me")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                    .padding(.top)
 
                 Text("Time: \(timerCount) seconds")
                     .font(.headline)
@@ -69,13 +70,25 @@ struct MatchMeView: View {
 
                 Spacer()
             }
+
+            // 🔙 Back Button "<"
+            Button(action: {
+                withAnimation { dismiss() }
+            }) {
+                Image(systemName: "chevron.left")
+                    .font(.title2)
+                    .foregroundColor(.pink)
+                    .padding(10)
+                    .background(Color.white)
+                    .clipShape(Circle())
+                    .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+            }
+            .padding(.leading, 16)
+            .padding(.top, 16)
         }
-        .onAppear {
-            setupGame()
-        }
-        .onDisappear {
-            timer?.invalidate()
-        }
+        .onAppear { setupGame() }
+        .onDisappear { timer?.invalidate() }
+        .navigationBarBackButtonHidden(true)
     }
 
     private func setupGame() {
@@ -94,7 +107,6 @@ struct MatchMeView: View {
     }
 
     private func loadNextBatch() {
-        // Get unused terms
         let remaining = allTerms.filter { !usedTermIDs.contains($0.term) }
         let batch = Array(remaining.prefix(12))
 
@@ -106,7 +118,6 @@ struct MatchMeView: View {
         currentBatch = batch
         usedTermIDs.formUnion(batch.map { $0.term })
 
-        // Create tiles
         var tiles: [Tile] = []
         for card in batch {
             tiles.append(Tile(text: card.term, matchID: card.term))
@@ -130,7 +141,6 @@ struct MatchMeView: View {
                 selectedIndices = []
 
                 if matchedIndices.count == shuffledPairs.count {
-                    // Delay slightly to show matched state before loading next batch
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                         loadNextBatch()
                     }
@@ -146,7 +156,7 @@ struct MatchMeView: View {
     }
 }
 
-// MARK: - Tile + TileView
+//Tile + TileView
 
 struct Tile: Identifiable {
     let id = UUID()
