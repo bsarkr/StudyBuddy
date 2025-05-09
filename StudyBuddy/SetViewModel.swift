@@ -8,6 +8,7 @@
 import Foundation
 import Firebase
 import FirebaseFirestore
+import FirebaseAuth
 
 class SetViewModel: ObservableObject {
     @Published var sets: [StudySet] = []
@@ -77,5 +78,29 @@ class SetViewModel: ObservableObject {
             .document(id)
             .setData(data, merge: true)
     }
+    
+    func fetchSetsByIDs(_ ids: [String], completion: @escaping ([StudySet]) -> Void) {
+        let db = Firestore.firestore()
+        var sets: [StudySet] = []
+        let group = DispatchGroup()
 
+        for id in ids {
+            group.enter()
+            db.collectionGroup("sets")
+                .whereField("id", isEqualTo: id)
+                .getDocuments { snapshot, _ in
+                    if let doc = snapshot?.documents.first {
+                        let data = doc.data()
+                        if let set = StudySet(id: doc.documentID, data: data) {
+                            sets.append(set)
+                        }
+                    }
+                    group.leave()
+                }
+        }
+
+        group.notify(queue: .main) {
+            completion(sets)
+        }
+    }
 }

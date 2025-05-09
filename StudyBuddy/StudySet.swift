@@ -8,18 +8,19 @@
 import Foundation
 import FirebaseFirestore
 
-struct FlashcardTerm: Identifiable, Codable {
+struct FlashcardTerm: Identifiable, Codable, Hashable {
     var id = UUID()
     var term: String
     var definition: String
 }
 
-struct StudySet: Identifiable {
+struct StudySet: Identifiable, Codable {
     var id: String
     var title: String
     var terms: [FlashcardTerm]
     var userId: String
     var timestamp: Timestamp
+    var creatorUsername: String? = nil
 
     init?(id: String, data: [String: Any]) {
         guard let title = data["title"] as? String,
@@ -37,5 +38,13 @@ struct StudySet: Identifiable {
             FlashcardTerm(term: $0["term"] ?? "", definition: $0["definition"] ?? "")
         }
     }
-}
 
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case terms
+        case userId
+        case timestamp
+        case creatorUsername
+    }
+}

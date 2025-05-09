@@ -44,16 +44,7 @@ struct SocialView: View {
                     } else if selectedTab == "Messages" {
                         MessagingView()
                     } else if selectedTab == "Sessions" {
-                        ScrollView {
-                            VStack(spacing: 20) {
-                                Text("Sessions View")
-                                    .font(.title2)
-                                    .foregroundColor(.gray)
-                                    .padding(.top, 40)
-                                Spacer()
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
+                        SessionsTabView()
                     }
                 }
             }
