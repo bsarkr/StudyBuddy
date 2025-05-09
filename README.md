@@ -30,7 +30,8 @@ Setup & Installation
 
 Contributions & Learnings
 
-This app was built as part of a semester-long project where we developed the full-stack development—from UI design to backend setup. Key accomplishments and challenges include:
+This app was built as part of a semester-long project where I developed the full-stack functionality, from UI design to backend setup. Key accomplishments and challenges include:
+- Developed user authentication and setup with Firebase and tracking sessions.
 - Implemented real-time friend request and messaging systems using Firebase listeners.
 - Integrated profile photo uploading with cropping using UIImagePickerController and Firebase Storage.
 - Designed a custom bottom tab bar to maintain consistent navigation across views.
