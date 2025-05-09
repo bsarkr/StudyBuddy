@@ -20,7 +20,7 @@ Technologies Used
 
 
 Setup & Installation
-1. Clone the repository: git clone https://github.com/your-username/studybuddy.git
+1. Clone the repository: git clone https://github.com/bsarkr/StudyBuddy.git
 2. Open the project in Xcode 15+.
 3. Run pod install if necessary for Firebase integration.
 4. Connect your own Firebase project by replacing GoogleService-Info.plist.
